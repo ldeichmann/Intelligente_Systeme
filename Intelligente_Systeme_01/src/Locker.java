@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by cru on 10/23/16.
  */
@@ -7,6 +10,7 @@ public class Locker {
 
     public int id;
     public int state;
+    public Map<Integer, Locker> encounterMap = new HashMap<>();
     public Boolean occupied;
     public Boolean inUse;
     private int returnTime;
@@ -24,7 +28,7 @@ public class Locker {
     }
 
     public void occupy(int time, int returnTime) {
-        System.out.format("Locker %d occupied\n", id);
+        System.out.format("Locker %d occupied, free at %d\n", id, returnTime);
         this.returnTime = returnTime;
         this.occupyTime = time;
         this.occupied = true;
@@ -39,6 +43,7 @@ public class Locker {
         this.inUse = false;
         this.state++;
         Locker.occupiedLockers--;
+        this.encounterMap.clear();
     }
 
     public void update(int time) {
