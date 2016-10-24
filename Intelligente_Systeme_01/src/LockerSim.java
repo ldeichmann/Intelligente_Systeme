@@ -22,6 +22,7 @@ public class LockerSim {
     public Locker[] lockers;
     public int time;
     public int encounters;
+    public int customers;
     private LockerAssign assigner;
 
     public LockerSim() {
@@ -48,6 +49,7 @@ public class LockerSim {
     public void newCustomer() {
         if (isNewCustomer()) {
             System.out.println("NEW_CUSTOMER");
+            this.customers++;
             int locker = this.assigner.assignLocker(this.lockers);
             if (locker == -1) {
                 System.out.println("NO MORE FREE LOCKERS!");
@@ -142,7 +144,7 @@ public class LockerSim {
     public static void main(String[] args) {
         LockerSim sim1 = new LockerSim();
         sim1.start();
-        System.out.format("sim1 encounters: %d", sim1.encounters);
+        System.out.format("sim1 encounters: %d\nsim1 customers: %d\n", sim1.encounters, sim1.customers);
     }
 
 }
