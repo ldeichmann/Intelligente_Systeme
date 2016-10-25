@@ -1,4 +1,13 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
 
 /**
  * Created by cru on 10/23/16.
@@ -24,8 +33,10 @@ public class LockerSim {
     public int encounters;
     public int customers;
     private LockerAssign assigner;
+    public List<Integer> stats;
 
-    public LockerSim() {
+    public LockerSim(List<Integer> stats) {
+        this.stats = stats;
         this.assigner = new LockerAssignRandom();
         this.lockers = new Locker[LOCKER_NUM];
         for (int i = 0; i < LOCKER_NUM; i++) {
@@ -42,8 +53,7 @@ public class LockerSim {
 
 
     public int getReturnTime() {
-        //TODO
-        return ThreadLocalRandom.current().nextInt(2*TIME_TO_CHANGE, 5*TIME_TO_CHANGE);
+        return this.stats.get(ThreadLocalRandom.current().nextInt(0, this.stats.size()));
     }
 
     public void newCustomer() {
@@ -141,8 +151,28 @@ public class LockerSim {
         }
     }
 
+    public static List<Integer> readStats() {
+        Path path = Paths.get("Belegungszeiten.txt");
+        List<Integer> list = new LinkedList<>();
+        try (Stream<String> lines = Files.lines(path)) {
+            lines.skip(1).forEach(s -> {
+//                System.out.println(s);
+                int time = Integer.parseInt(s.split(" ")[0]);
+                int people = Integer.parseInt(s.split(" ")[1]);
+                for (int j = 0; j < people; j++) {
+                    list.add(time*6);
+                }
+            });
+        } catch (IOException ex) {
+            System.out.println(ex);
+            System.out.println("File things failed, sorry.");
+        }
+        return list;
+    }
+
     public static void main(String[] args) {
-        LockerSim sim1 = new LockerSim();
+        List<Integer> stats = readStats();
+        LockerSim sim1 = new LockerSim(stats);
         sim1.start();
         System.out.format("sim1 encounters: %d\nsim1 customers: %d\n", sim1.encounters, sim1.customers);
     }
