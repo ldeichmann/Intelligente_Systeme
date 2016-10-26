@@ -103,18 +103,18 @@ fn get_random_free_locker(lr: &[Locker]) -> i16 {
     }
 }
 
-fn get_return_time() -> i16 {
+fn get_return_time(input_data: &Vec<i16>) -> i16 {
     let mut rng = thread_rng();
-    let nr: i16 = rng.gen_range(2*TIME_TO_CHANGE as i16, 5*TIME_TO_CHANGE as i16);
-    nr
+    let nr: usize = rng.gen_range(0, input_data.len()-1);
+    input_data[nr]
 }
 
-fn new_customer(lr: &mut [Locker], time: i16, occupied_lockers: &mut i16) {
+fn new_customer(lr: &mut [Locker], time: i16, occupied_lockers: &mut i16, input_data: &Vec<i16>) {
     if *occupied_lockers == (NUM_LOCKERS as i16) {
         println!("Error: All lockers occupied")
     } else {
         let locker_number = get_random_free_locker(lr);
-        lr[(locker_number as usize)].assign_locker(time, time+get_return_time());
+        lr[(locker_number as usize)].assign_locker(time, time+get_return_time(input_data));
         *occupied_lockers = *occupied_lockers + 1;
 //        println!("New customer in locker {}, free at {}, occupied lockers {}", locker_number, lr[(locker_number as usize)].return_time, occupied_lockers)
     }
@@ -170,7 +170,7 @@ fn detect_encounters(lr: &mut [Locker], encounters: &mut i16) {
 
 }
 
-fn simulation() {
+fn simulation(input_data: &Vec<i16>) {
     let mut locker_array: [Locker; NUM_LOCKERS] = [Locker { id: 0, return_time: 0, occupy_time: 0, state: LockerState::Free, had_encounter: false}; NUM_LOCKERS];
     initialize_lockers(&mut locker_array);
     let mut occupied_lockers: i16 = 0;
@@ -183,7 +183,7 @@ fn simulation() {
         update_lockers(&mut locker_array, i, &mut occupied_lockers);
         if check_new_customer() {
             customers = customers + 1;
-            new_customer(&mut locker_array, i, &mut occupied_lockers)
+            new_customer(&mut locker_array, i, &mut occupied_lockers, input_data)
         }
         detect_encounters(&mut locker_array, &mut encounters);
         i = i + 1;
@@ -196,18 +196,33 @@ fn simulation() {
 
 fn main() {
     let mut data = String::new();
-    let mut f = File::open("Belegungszeiten.txt").expect("Unable to open file");
-    f.read_to_string(&mut data).expect("Unable to read string");
+    let mut f = match File::open("Belegungszeiten.txt") {
+        Ok(file) => file,
+        Err(e) => {
+            panic!("Could not read Belegungszeiten")
+        }
+    };
+    f.read_to_string(&mut data);
+    let split = data.as_str().split("\n");
+    let mut vec = split.collect::<Vec<&str>>();
+    vec.remove(0);
 
-    println!("Hello, world!");
-    let tm1 = precise_time_ns();
-    simulation();
-    let tm2 = precise_time_ns();
-    println!("{}ns", tm2-tm1);
+    let mut input_data: Vec<i16> = Vec::new();
+
+    for x in &vec {
+        if x.trim().len() > 1 {
+            let split2 = x.split(" ").collect::<Vec<&str>>();
+            let my_int: usize = split2[1].trim().parse().ok().expect("err");
+            for _ in 0..my_int-1 {
+                input_data.push(split2[0].trim().parse().ok().expect("err"));
+            }
+        }
+    }
+
     let mut i = 0;
     let tm3 = precise_time_ns();
-    while i < 10 {
-        simulation();
+    while i < 20 {
+        simulation(&input_data);
         i = i + 1;
     }
     let tm4 = precise_time_ns();
