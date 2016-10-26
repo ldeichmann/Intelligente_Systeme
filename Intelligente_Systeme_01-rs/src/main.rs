@@ -202,11 +202,11 @@ fn main() {
     let mut data = String::new();
     let mut f = match File::open("Belegungszeiten.txt") {
         Ok(file) => file,
-        Err(e) => {
+        Err(_) => {
             panic!("Could not read Belegungszeiten")
         }
     };
-    f.read_to_string(&mut data);
+    f.read_to_string(&mut data).expect("could not read to string");
     let split = data.as_str().split("\n");
     let mut vec = split.collect::<Vec<&str>>();
     vec.remove(0);
@@ -224,13 +224,12 @@ fn main() {
     }
 
     let mut children = vec![];
-    let mut i = 0;
     let tm3 = precise_time_ns();
     //    while i < 10000 {
     //        simulation(&input_data);
     //        i = i + 1;
     //    }
-    for i in 0..NTHREADS {
+    for _ in 0..NTHREADS {
         let i_data = input_data.clone();
         children.push(thread::spawn(move || {
             let mut j = 0;
