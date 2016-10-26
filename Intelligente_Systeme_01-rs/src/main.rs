@@ -4,12 +4,14 @@ use rand::{thread_rng, Rng};
 use time::precise_time_ns;
 use std::io::prelude::*;
 use std::fs::File;
+use std::thread;
 
 const NUM_LOCKERS: usize = 150;
 const TIME_TO_CHANGE: usize = 30; // 5 * 6 = 30
 const RUNTIME: usize = 3600;
 const CUSTOMER_PROBABILITY: u8 = 1;
 const CUSTOMER_PROBABILITY_MAX: u8 = 10;
+static NTHREADS: i32 = 10;
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 enum LockerState {
@@ -189,8 +191,10 @@ fn simulation(input_data: &Vec<i16>) {
         i = i + 1;
     }
 
-    println!("Total customers: {}", customers);
-    println!("Total encounters: {}", encounters);
+//    println!("Total customers: {}", customers);
+//    println!("Total encounters: {}", encounters);
+    print!("{}", format!("Total customers {}\n", customers));
+    print!("{}", format!("Total encounters {}\n", encounters));
 }
 
 
@@ -213,17 +217,32 @@ fn main() {
         if x.trim().len() > 1 {
             let split2 = x.split(" ").collect::<Vec<&str>>();
             let my_int: usize = split2[1].trim().parse().ok().expect("err");
-            for _ in 0..my_int-1 {
+            for _ in 0..my_int - 1 {
                 input_data.push(split2[0].trim().parse().ok().expect("err"));
             }
         }
     }
 
+    let mut children = vec![];
     let mut i = 0;
     let tm3 = precise_time_ns();
-    while i < 20 {
-        simulation(&input_data);
-        i = i + 1;
+    //    while i < 10000 {
+    //        simulation(&input_data);
+    //        i = i + 1;
+    //    }
+    for i in 0..NTHREADS {
+        let i_data = input_data.clone();
+        children.push(thread::spawn(move || {
+            let mut j = 0;
+            while j < 1000 {
+                simulation(&i_data.clone());
+                j = j + 1;
+            }
+        }));
+    }
+    for child in children {
+        // Wait for the thread to finish. Returns a result.
+        let _ = child.join();
     }
     let tm4 = precise_time_ns();
     println!("{}ns", tm4-tm3);
