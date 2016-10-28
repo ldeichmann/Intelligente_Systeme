@@ -7,12 +7,13 @@ use std::fs::File;
 use std::thread;
 use std::sync::{Arc, Mutex};
 
+const RUNS: usize = 50000;
 const NUM_LOCKERS: usize = 150;
 const TIME_TO_CHANGE: usize = 30; // 5 * 6 = 30
 const RUNTIME: usize = 4320;
 const CUSTOMER_PROBABILITY: u8 = 1;
 const CUSTOMER_PROBABILITY_MAX: u8 = 10;
-const NTHREADS: i32 = 10;
+const NTHREADS: usize = 10;
 const FOCUS_BEGIN: i16 = 1770;
 const FOCUS_END: i16 = 1830;
 
@@ -269,7 +270,7 @@ fn main() {
         children.push(thread::spawn(move || {
             let mut j = 0;
             let mut results: Vec<(i16, i16, i16)> = vec![];
-            while j < 1000 {
+            while j < RUNS/NTHREADS {
                 results.push(simulation(&i_data.clone()));
                 j = j + 1;
             }
@@ -282,17 +283,15 @@ fn main() {
         let _ = child.join();
     }
     let tm4 = precise_time_ns();
-    println!("{}ns", tm4-tm3);
     let results = results_container.clone();
     let m = results.lock().unwrap();
     let mut sum_cust = 0.0_f32;
     let mut sum_enc = 0.0_f32;
     let mut sum_foc_enc = 0.0_f32;
     for a in m.iter() {
-//        println!("{} {} {}", a.0, a.1, a.2);
         sum_cust = sum_cust + a.0 as f32;
         sum_enc = sum_enc + a.1 as f32;
         sum_foc_enc = sum_foc_enc + a.2 as f32;
     }
-    println!("Per day:\n\tAverage customers:{}\n\tAverage encounters: {}\n\tAverage focus person encounters: {}", sum_cust/10000.0, sum_enc/10000.0, sum_foc_enc/10000.0)
+    println!("Runs: {}\nRuntime: {}ms\nPer day:\n\tAverage customers: {}\n\tAverage encounters: {}\n\tAverage focus person encounters: {}\n\tAverage focus person encounters for 10 days: {}", RUNS, (tm4-tm3)/1000000, sum_cust/(RUNS as f32), sum_enc/(RUNS as f32), sum_foc_enc/(RUNS as f32), (sum_foc_enc*10.0)/(RUNS as f32))
 }
