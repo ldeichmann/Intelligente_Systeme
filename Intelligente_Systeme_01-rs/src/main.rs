@@ -6,11 +6,14 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::thread;
 use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 
-const RUNS: usize = 50000;
+const RUNS: usize = 10000;
 const NUM_LOCKERS: usize = 150;
 const TIME_TO_CHANGE: usize = 30; // 5 * 6 = 30
+const MINUTES_TO_UNITS_FACTOR: i16 = 6;
 const RUNTIME: usize = 4320;
+const PROB_THRESHOLD: f32 = 0.6;
 const CUSTOMER_PROBABILITY: u8 = 1;
 const CUSTOMER_PROBABILITY_MAX: u8 = 10;
 const NTHREADS: usize = 10;
@@ -32,7 +35,8 @@ struct Locker {
     state: LockerState,
     had_encounter: bool,
     focus: bool,
-    focus_counted: bool
+    focus_counted: bool,
+    encounter_probability: f32,
 }
 
 // impl of Val
@@ -66,13 +70,26 @@ impl Locker {
 
     pub fn use_locker(&mut self) {
         self.state = LockerState::InUse;
+        self.encounter_probability = 1.0;
     }
 
     pub fn is_free(&self) -> bool {
         self.state == LockerState::Free
     }
 
-    pub fn update_locker(&mut self, time: i16, occupied_lockers: &mut i16) {
+    pub fn is_in_use(&self) -> bool {
+        self.state == LockerState::InUse
+    }
+
+    pub fn update_probability(&mut self, time: i16, prob_map: &HashMap<i16, f32>) {
+        if self.is_in_use() {
+            self.encounter_probability = 1.0;
+        } else if prob_map.contains_key(&(time-self.occupy_time)) {
+            self.encounter_probability = *prob_map.get(&(time-self.occupy_time)).unwrap();
+        }
+    }
+
+    pub fn update_locker(&mut self, time: i16, occupied_lockers: &mut i16, prob_map: &HashMap<i16, f32>) {
         if !self.is_free() {
             if time == self.return_time - (TIME_TO_CHANGE as i16) {
                 self.use_locker();
@@ -83,6 +100,8 @@ impl Locker {
                 self.occupy_locker();
                 self.reset_encounter();
                 self.reset_focus_counted();
+            } else {
+                self.update_probability(time, prob_map);
             }
         }
     }
@@ -96,15 +115,60 @@ fn initialize_lockers(lr: &mut [Locker]) {
     }
 }
 
-fn update_lockers(lr: &mut [Locker], time: i16, occupied_lockers: &mut i16) {
+fn update_lockers(lr: &mut [Locker], time: i16, occupied_lockers: &mut i16, prob_map: &HashMap<i16, f32>) {
     for mut x in lr.iter_mut() {
-        x.update_locker(time, &mut *occupied_lockers);
+        x.update_locker(time, &mut *occupied_lockers, prob_map);
     }}
 
 fn check_new_customer() -> bool {
     let mut rng = thread_rng();
     let cst: u8 = rng.gen_range(1, CUSTOMER_PROBABILITY_MAX+1);
     cst == CUSTOMER_PROBABILITY
+}
+
+fn get_free_locker(lr: &[Locker]) -> i16 {
+    for x in 0..(lr.len()-1 as usize) {
+        if lr[x].is_free() {
+            let mut sum_prob = 0.0_f32;
+            if x == 0 {
+                sum_prob = sum_prob + lr[x+1].encounter_probability;
+                sum_prob = sum_prob + lr[x+2].encounter_probability;
+                sum_prob = sum_prob + lr[x+3].encounter_probability;
+            } else if x == 1 {
+                sum_prob = sum_prob + lr[x-1].encounter_probability;
+                sum_prob = sum_prob + lr[x+1].encounter_probability;
+                sum_prob = sum_prob + lr[x+2].encounter_probability;
+            } else if x == NUM_LOCKERS-1 {
+                sum_prob = sum_prob + lr[x-1].encounter_probability;
+                sum_prob = sum_prob + lr[x-2].encounter_probability;
+                sum_prob = sum_prob + lr[x-3].encounter_probability;
+            } else if x == NUM_LOCKERS-2 {
+                sum_prob = sum_prob + lr[x+1].encounter_probability;
+                sum_prob = sum_prob + lr[x-1].encounter_probability;
+                sum_prob = sum_prob + lr[x-2].encounter_probability;
+            } else if (x % 2) == 0 {
+                sum_prob = sum_prob + lr[x-2].encounter_probability;
+                sum_prob = sum_prob + lr[x-1].encounter_probability;
+                sum_prob = sum_prob + lr[x+1].encounter_probability;
+                sum_prob = sum_prob + lr[x+2].encounter_probability;
+                sum_prob = sum_prob + lr[x+3].encounter_probability;
+            } else if (x % 2) == 1 {
+                sum_prob = sum_prob + lr[x-3].encounter_probability;
+                sum_prob = sum_prob + lr[x-2].encounter_probability;
+                sum_prob = sum_prob + lr[x-1].encounter_probability;
+                sum_prob = sum_prob + lr[x+1].encounter_probability;
+                sum_prob = sum_prob + lr[x+2].encounter_probability;
+            } else {
+                println!("Sit your bird ass down!")
+            }
+
+            if sum_prob < PROB_THRESHOLD {
+//                println!("Assigned {} with prob {}", x, sum_prob);
+                return x as i16
+            }
+        }
+    }
+    get_random_free_locker(lr)
 }
 
 fn get_random_free_locker(lr: &[Locker]) -> i16 {
@@ -129,7 +193,8 @@ fn new_customer(lr: &mut [Locker], time: i16, occupied_lockers: &mut i16, input_
         println!("Error: All lockers occupied");
         -1
     } else {
-        let locker_number = get_random_free_locker(lr);
+//        let locker_number = get_random_free_locker(lr);
+        let locker_number = get_free_locker(lr);
         lr[(locker_number as usize)].assign_locker(time, time+get_return_time(input_data));
         *occupied_lockers = *occupied_lockers + 1;
         locker_number
@@ -139,7 +204,7 @@ fn new_customer(lr: &mut [Locker], time: i16, occupied_lockers: &mut i16, input_
 }
 
 fn has_encounter(lr: &mut [Locker], encounters: &mut i16, a: usize, b: usize) {
-    if !lr[a].is_free() && !lr[b].is_free() {
+    if lr[a].is_in_use() && lr[b].is_in_use() {
         if !lr[a].had_encounter || !lr[b].had_encounter {
             *encounters = *encounters + 1;
             lr[a].had_encounter = true;
@@ -194,8 +259,19 @@ fn detect_focus_encounter(lr: &mut [Locker], id: &i16, encounters: &mut i16) {
     }
 }
 
-fn simulation(input_data: &Vec<i16>) -> (i16, i16, i16){
-    let mut locker_array: [Locker; NUM_LOCKERS] = [Locker { id: 0, return_time: 0, occupy_time: 0, state: LockerState::Free, had_encounter: false, focus: false, focus_counted: false}; NUM_LOCKERS];
+fn simulation(input_data: &Vec<i16>, prob_map: &HashMap<i16, f32>) -> (i16, i16, i16){
+    let mut locker_array: [Locker; NUM_LOCKERS] =   [Locker {
+                                                            id: 0,
+                                                            return_time: 0,
+                                                            occupy_time: 0,
+                                                            state: LockerState::Free,
+                                                            had_encounter: false,
+                                                            focus: false,
+                                                            focus_counted: false,
+                                                            encounter_probability: 0.0
+                                                            };
+                                                            NUM_LOCKERS
+                                                   ];
     initialize_lockers(&mut locker_array);
     let mut occupied_lockers: i16 = 0;
     let mut customers: i16 = 0;
@@ -205,8 +281,7 @@ fn simulation(input_data: &Vec<i16>) -> (i16, i16, i16){
 
     let mut i = 0;
     while i < (RUNTIME as i16) {
-//        println!("Update {}", i);
-        update_lockers(&mut locker_array, i, &mut occupied_lockers);
+        update_lockers(&mut locker_array, i, &mut occupied_lockers, prob_map);
         if check_new_customer() {
             customers = customers + 1;
             let id: i16 = new_customer(&mut locker_array, i, &mut occupied_lockers, input_data);
@@ -227,15 +302,12 @@ fn simulation(input_data: &Vec<i16>) -> (i16, i16, i16){
         i = i + 1;
     }
 
-//    println!("Total customers: {}", customers);
-//    println!("Total encounters: {}", encounters);
 //    print!("{}", format!("Total customers {}\n", customers));
 //    print!("{}", format!("Total encounters {}\n", encounters));
     (customers, encounters, focus_encounters)
 }
 
-
-fn main() {
+fn parse_belegungszeiten() -> Vec<i16> {
     let mut data = String::new();
     let mut f = match File::open("Belegungszeiten.txt") {
         Ok(file) => file,
@@ -255,10 +327,44 @@ fn main() {
             let split2 = x.split(" ").collect::<Vec<&str>>();
             let my_int: usize = split2[1].trim().parse().ok().expect("err");
             for _ in 0..my_int - 1 {
-                input_data.push(split2[0].trim().parse().ok().expect("err"));
+                let data: i16 = split2[0].trim().parse().ok().expect("err");
+                input_data.push(data * MINUTES_TO_UNITS_FACTOR);
             }
         }
     }
+    input_data
+}
+
+fn gen_prob_map(input_data: &Vec<i16>) -> HashMap<i16, f32>{
+
+    let mut prob_map = HashMap::new();
+    let mut tmp: i16 = input_data[0];
+    let mut count: f32 = 0.0;
+    for x in input_data {
+        if *x != tmp {
+            prob_map.insert(tmp, count);
+            tmp = *x;
+            //            count = 1.0_f32;
+        } else {
+            count = count + 1.0_f32;
+        }
+    }
+    prob_map.insert(tmp, count);
+//    println!("{:?}", prob_map);
+
+    prob_map = prob_map.iter()
+        .map(|(k, v)| (*k,(v/(count as f32))))
+        .collect();
+//    println!("{:?}", prob_map);
+    prob_map
+}
+
+fn main() {
+
+    let input_data = parse_belegungszeiten();
+    // generate probability hashmap
+    let prob_map = gen_prob_map(&input_data);
+
 
     let mut children = vec![];
     let results_vec: Vec<(i16, i16, i16)> = vec![];
@@ -266,12 +372,13 @@ fn main() {
     let tm3 = precise_time_ns();
     for _ in 0..NTHREADS {
         let i_data = input_data.clone();
+        let prob_map_clone = prob_map.clone();
         let total_data = results_container.clone();
         children.push(thread::spawn(move || {
             let mut j = 0;
             let mut results: Vec<(i16, i16, i16)> = vec![];
             while j < RUNS/NTHREADS {
-                results.push(simulation(&i_data.clone()));
+                results.push(simulation(&i_data.clone(), &prob_map_clone.clone() ));
                 j = j + 1;
             }
             let mut total_data = total_data.lock().unwrap();
@@ -293,5 +400,18 @@ fn main() {
         sum_enc = sum_enc + a.1 as f32;
         sum_foc_enc = sum_foc_enc + a.2 as f32;
     }
-    println!("Runs: {}\nRuntime: {}ms\nPer day:\n\tAverage customers: {}\n\tAverage encounters: {}\n\tAverage focus person encounters: {}\n\tAverage focus person encounters for 10 days: {}", RUNS, (tm4-tm3)/1000000, sum_cust/(RUNS as f32), sum_enc/(RUNS as f32), sum_foc_enc/(RUNS as f32), (sum_foc_enc*10.0)/(RUNS as f32))
+    println!("{}: {}\n{}: {}ms\n{}:\n\t{}: {}\n\t{}: {}\n\t{}: {}\n\t{}: {}",
+             "Runs",
+             RUNS,
+             "Runtime",
+             (tm4-tm3)/1000000,
+             "Per day",
+             "Average customers",
+             sum_cust/(RUNS as f32),
+             "Average encounters",
+             sum_enc/(RUNS as f32),
+             "Average focus person encounters",
+             sum_foc_enc/(RUNS as f32),
+             "Average focus person encounters for 10 days",
+             (sum_foc_enc*10.0)/(RUNS as f32))
 }
