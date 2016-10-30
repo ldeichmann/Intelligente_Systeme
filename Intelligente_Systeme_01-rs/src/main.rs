@@ -2,6 +2,7 @@ extern crate rand;
 extern crate time;
 use rand::{thread_rng, Rng};
 use time::precise_time_ns;
+use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 use std::thread;
@@ -359,6 +360,19 @@ fn gen_prob_map(input_data: &Vec<i16>) -> HashMap<i16, f32>{
     prob_map
 }
 
+fn write_results(results: Arc<Mutex<Vec<(i16, i16, i16)>>>) -> Result<(), io::Error> {
+    let mut hello = String::from("customers,encounters,focus_encounters\n");
+    let m = results.lock().unwrap();
+
+    for a in m.iter() {
+        hello.push_str(&format!("{},{},{}\n", a.0, a.1, a.2));
+    }
+
+    let mut f = try!(File::create("results.csv"));
+    try!(f.write_all(hello.as_bytes()));
+    Ok(())
+}
+
 fn main() {
 
     let input_data = parse_belegungszeiten();
@@ -391,15 +405,18 @@ fn main() {
     }
     let tm4 = precise_time_ns();
     let results = results_container.clone();
-    let m = results.lock().unwrap();
     let mut sum_cust = 0.0_f32;
     let mut sum_enc = 0.0_f32;
     let mut sum_foc_enc = 0.0_f32;
-    for a in m.iter() {
-        sum_cust = sum_cust + a.0 as f32;
-        sum_enc = sum_enc + a.1 as f32;
-        sum_foc_enc = sum_foc_enc + a.2 as f32;
+    {
+        let m = results.lock().unwrap();
+        for a in m.iter() {
+            sum_cust = sum_cust + a.0 as f32;
+            sum_enc = sum_enc + a.1 as f32;
+            sum_foc_enc = sum_foc_enc + a.2 as f32;
+        }
     }
+    write_results(results_container.clone());
     println!("{}: {}\n{}: {}ms\n{}:\n\t{}: {}\n\t{}: {}\n\t{}: {}\n\t{}: {}",
              "Runs",
              RUNS,
