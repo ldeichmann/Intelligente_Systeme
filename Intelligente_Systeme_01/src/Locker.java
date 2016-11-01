@@ -28,7 +28,7 @@ public class Locker {
     }
 
     public void occupy(int time, int returnTime) {
-        System.out.format("Locker %d occupied, free at %d\n", id, returnTime);
+        //System.out.format("Locker %d occupied, free at %d\n", id, returnTime);
         this.returnTime = returnTime;
         this.occupyTime = time;
         this.occupied = true;
@@ -38,7 +38,7 @@ public class Locker {
     }
 
     public void free () {
-        System.out.format("Locker %d freed\n", id);
+        //System.out.format("Locker %d freed\n", id);
         this.occupied = false;
         this.inUse = false;
         this.state++;

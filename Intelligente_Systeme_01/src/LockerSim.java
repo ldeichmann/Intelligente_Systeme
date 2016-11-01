@@ -12,7 +12,8 @@ import java.util.stream.Stream;
 /**
  * Created by cru on 10/23/16.
  */
-public class LockerSim {
+public class LockerSim{
+
 
     /**
      * Locker parameters
@@ -34,6 +35,7 @@ public class LockerSim {
     public int customers;
     private LockerAssign assigner;
     public List<Integer> stats;
+
 
     public LockerSim(List<Integer> stats) {
         this.stats = stats;
@@ -58,7 +60,7 @@ public class LockerSim {
 
     public void newCustomer() {
         if (isNewCustomer()) {
-            System.out.println("NEW_CUSTOMER");
+            //System.out.println("NEW_CUSTOMER");
             this.customers++;
             int locker = this.assigner.assignLocker(this.lockers);
             if (locker == -1) {
@@ -135,11 +137,11 @@ public class LockerSim {
     }
 
     public void start() {
-        this.update();
+            this.update();
     }
 
     public void update() {
-        System.out.format("Update! time: %d\n", this.time);
+        //System.out.format("Update! time: %d\n", this.time);
         for (Locker l : this.lockers) {
             l.update(this.time);
         }
@@ -168,13 +170,6 @@ public class LockerSim {
             System.out.println("File things failed, sorry.");
         }
         return list;
-    }
-
-    public static void main(String[] args) {
-        List<Integer> stats = readStats();
-        LockerSim sim1 = new LockerSim(stats);
-        sim1.start();
-        System.out.format("sim1 encounters: %d\nsim1 customers: %d\n", sim1.encounters, sim1.customers);
     }
 
 }
