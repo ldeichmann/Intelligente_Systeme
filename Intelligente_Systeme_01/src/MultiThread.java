@@ -2,8 +2,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -15,14 +17,16 @@ public class MultiThread implements Runnable{
      */
     private Thread t;
     public List<Integer> stats;
+    public Map<Integer, Float> distributionMap;
     public List<Integer> customer;
     public List<Integer> encounters;
     public List<Integer> focusEncounters;
     public static final int threads = 4;
     public static final int runs = 250;
 
-    public MultiThread(List<Integer> stats) {
+    public MultiThread(List<Integer> stats, Map<Integer, Float> distributionMap) {
         this.stats = stats;
+        this.distributionMap = distributionMap;
         this.customer = new LinkedList<>();
         this.encounters = new LinkedList<>();
         this.focusEncounters = new LinkedList<>();
@@ -34,7 +38,7 @@ public class MultiThread implements Runnable{
     }
     public void run() {
         for(int i = 0; i < runs; i++) {
-            LockerSim sim = new LockerSim(stats);
+            LockerSim sim = new LockerSim(stats, distributionMap);
             sim.update();
             customer.add(sim.customers);
             encounters.add(sim.encounters);
@@ -49,7 +53,6 @@ public class MultiThread implements Runnable{
         List<Integer> list = new LinkedList<>();
         try (Stream<String> lines = Files.lines(path)) {
             lines.skip(1).forEach(s -> {
-//                System.out.println(s);
                 int time = Integer.parseInt(s.split(" ")[0]);
                 int people = Integer.parseInt(s.split(" ")[1]);
                 for (int j = 0; j < people; j++) {
@@ -63,15 +66,38 @@ public class MultiThread implements Runnable{
         return list;
     }
 
+    public static Map<Integer, Float> generateDistributionMap(List<Integer> list){
+        Map<Integer, Float> distributionMap = new HashMap<>();
+        int temp = list.get(0);
+        float count = 0;
+        for (int i: list
+             ) {
+            if(i != temp) {
+                distributionMap.put(temp, count);
+                temp = i;
+            }
+            count++;
+        }
+        distributionMap.put(temp,count);
+
+        for(Map.Entry<Integer, Float> entry : distributionMap.entrySet()){
+            entry.setValue(entry.getValue()/count);
+        }
+
+        return distributionMap;
+    }
+    
     public static void main(String[] args) throws Exception{
         List<Integer> stats = readStats();
+        Map<Integer, Float> distributionMap = generateDistributionMap(stats);
+        System.out.println(distributionMap);
         List<MultiThread> threadlist = new LinkedList();
         double DCustomer = 0;
         double DEncounters = 0;
         double DFocusEncounters = 0;
         long millis1 = System.currentTimeMillis();
         for(int i = 0; i < threads ; i++) {
-            MultiThread mult = new MultiThread(stats);
+            MultiThread mult = new MultiThread(stats,distributionMap);
             mult.start();
             threadlist.add(mult);
         }

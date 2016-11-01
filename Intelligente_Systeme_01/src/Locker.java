@@ -16,6 +16,7 @@ public class Locker {
     public Boolean focusPerson;
     private int returnTime;
     private int occupyTime;
+    public float encounterProbability;
 
     private int time_to_change;
 
@@ -27,6 +28,7 @@ public class Locker {
         this.occupied = false;
         this.inUse = false;
         this.focusPerson = false;
+        this.encounterProbability = 0;
     }
 
     public void occupy(int time, int returnTime) {
@@ -50,7 +52,7 @@ public class Locker {
         this.focusPerson = false;
     }
 
-    public void update(int time) {
+    public void update(int time, Map<Integer, Float> distributionMap) {
         // customer returns
         if (time == this.returnTime-time_to_change) {
             this.inUse = true;
@@ -62,6 +64,20 @@ public class Locker {
         } else if (time == this.occupyTime+time_to_change) {
             this.inUse = false;
         }
+        this.update_probability(time, distributionMap);
     }
 
+    public void update_probability(int time, Map<Integer, Float> distributionMap){
+        if (!this.occupied) {
+            this.encounterProbability = 0;
+        }
+        else if (this.inUse){
+            this.encounterProbability = 1;
+        }
+        else {
+            if(distributionMap.containsKey(time - this.occupyTime)){
+                this.encounterProbability = distributionMap.get(time - this.occupyTime);
+            }
+        }
+    }
 }

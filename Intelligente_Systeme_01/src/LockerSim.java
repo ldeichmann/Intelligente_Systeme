@@ -39,11 +39,13 @@ public class LockerSim{
     public List<Integer> stats;
     public int focusId;
     public int focusEncounter;
+    public Map<Integer, Float> distributionMap;
 
 
-    public LockerSim(List<Integer> stats) {
+    public LockerSim(List<Integer> stats, Map<Integer, Float> map) {
         this.stats = stats;
-        this.assigner = new LockerAssignRandom();
+        this.distributionMap = map;
+        this.assigner = new LockerAssignDistributed();
         this.lockers = new Locker[LOCKER_NUM];
         for (int i = 0; i < LOCKER_NUM; i++) {
             this.lockers[i] = new Locker(i, TIME_TO_CHANGE);
@@ -156,7 +158,7 @@ public class LockerSim{
     public void update() {
         //System.out.format("Update! time: %d\n", this.time);
         for (Locker l : this.lockers) {
-            l.update(this.time);
+            l.update(this.time, distributionMap);
         }
         this.newCustomer();
         this.detectEncounters();
@@ -171,7 +173,6 @@ public class LockerSim{
         List<Integer> list = new LinkedList<>();
         try (Stream<String> lines = Files.lines(path)) {
             lines.skip(1).forEach(s -> {
-//                System.out.println(s);
                 int time = Integer.parseInt(s.split(" ")[0]);
                 int people = Integer.parseInt(s.split(" ")[1]);
                 for (int j = 0; j < people; j++) {
