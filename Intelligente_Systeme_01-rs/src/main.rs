@@ -14,7 +14,7 @@ const NUM_LOCKERS: usize = 150;
 const TIME_TO_CHANGE: usize = 30; // 5 * 6 = 30
 const MINUTES_TO_UNITS_FACTOR: i16 = 6;
 const RUNTIME: usize = 4320;
-const PROB_THRESHOLD: f32 = 0.6;
+const PROB_THRESHOLD: i16 = 260;
 const CUSTOMER_PROBABILITY: u8 = 1;
 const CUSTOMER_PROBABILITY_MAX: u8 = 10;
 const NTHREADS: usize = 10;
@@ -83,20 +83,24 @@ impl Locker {
     }
 
     pub fn update_probability(&mut self, time: i16, prob_map: &HashMap<i16, f32>) {
-        if self.is_in_use() {
+        let time_to_check = time-self.occupy_time;
+        if self.is_in_use() || time_to_check < PROB_THRESHOLD {
             self.encounter_probability = 1.0;
-        } else if prob_map.contains_key(&(time-self.occupy_time)) {
-            self.encounter_probability = *prob_map.get(&(time-self.occupy_time)).unwrap();
+        } else if prob_map.contains_key(&(time_to_check)) {
+            self.encounter_probability = *prob_map.get(&(time_to_check)).unwrap();
         }
     }
 
     pub fn update_locker(&mut self, time: i16, occupied_lockers: &mut i16, prob_map: &HashMap<i16, f32>) {
         if !self.is_free() {
+            // customer returns
             if time == self.return_time - (TIME_TO_CHANGE as i16) {
                 self.use_locker();
+            //customer leaves the gym
             } else if time == self.return_time {
                 self.free_locker();
                 *occupied_lockers = *occupied_lockers - 1;
+            // customer leaves for the gym
             } else if time == self.occupy_time + (TIME_TO_CHANGE as i16) {
                 self.occupy_locker();
                 self.reset_encounter();
@@ -128,33 +132,35 @@ fn check_new_customer() -> bool {
 }
 
 fn get_free_locker(lr: &[Locker]) -> i16 {
+    let mut min_val = 200.0_f32;
+    let mut min_pos = 0;
     for x in 0..(lr.len()-1 as usize) {
         if lr[x].is_free() {
             let mut sum_prob = 0.0_f32;
             if x == 0 {
-                sum_prob = sum_prob + lr[x+1].encounter_probability;
+                sum_prob = lr[x+1].encounter_probability;
                 sum_prob = sum_prob + lr[x+2].encounter_probability;
                 sum_prob = sum_prob + lr[x+3].encounter_probability;
             } else if x == 1 {
-                sum_prob = sum_prob + lr[x-1].encounter_probability;
+                sum_prob = lr[x-1].encounter_probability;
                 sum_prob = sum_prob + lr[x+1].encounter_probability;
                 sum_prob = sum_prob + lr[x+2].encounter_probability;
             } else if x == NUM_LOCKERS-1 {
-                sum_prob = sum_prob + lr[x-1].encounter_probability;
+                sum_prob = lr[x-1].encounter_probability;
                 sum_prob = sum_prob + lr[x-2].encounter_probability;
                 sum_prob = sum_prob + lr[x-3].encounter_probability;
             } else if x == NUM_LOCKERS-2 {
-                sum_prob = sum_prob + lr[x+1].encounter_probability;
+                sum_prob = lr[x+1].encounter_probability;
                 sum_prob = sum_prob + lr[x-1].encounter_probability;
                 sum_prob = sum_prob + lr[x-2].encounter_probability;
             } else if (x % 2) == 0 {
-                sum_prob = sum_prob + lr[x-2].encounter_probability;
+                sum_prob = lr[x-2].encounter_probability;
                 sum_prob = sum_prob + lr[x-1].encounter_probability;
                 sum_prob = sum_prob + lr[x+1].encounter_probability;
                 sum_prob = sum_prob + lr[x+2].encounter_probability;
                 sum_prob = sum_prob + lr[x+3].encounter_probability;
             } else if (x % 2) == 1 {
-                sum_prob = sum_prob + lr[x-3].encounter_probability;
+                sum_prob = lr[x-3].encounter_probability;
                 sum_prob = sum_prob + lr[x-2].encounter_probability;
                 sum_prob = sum_prob + lr[x-1].encounter_probability;
                 sum_prob = sum_prob + lr[x+1].encounter_probability;
@@ -162,26 +168,28 @@ fn get_free_locker(lr: &[Locker]) -> i16 {
             } else {
                 println!("Sit your bird ass down!")
             }
-
-            if sum_prob < PROB_THRESHOLD {
-//                println!("Assigned {} with prob {}", x, sum_prob);
+            if sum_prob == 0.0_f32 {
                 return x as i16
+            } else if sum_prob <= min_val {
+                min_pos = x;
+                min_val = sum_prob;
             }
+
         }
     }
-    get_random_free_locker(lr)
+    min_pos as i16
 }
 
-fn get_random_free_locker(lr: &[Locker]) -> i16 {
-    let mut rng = thread_rng();
-    let nr: i16 = rng.gen_range(0, lr.len() as i16);
-//    println!("Get Random free locker {} {}", nr, lr[nr as usize].is_free());
-    if !lr[nr as usize].is_free() {
-        return get_random_free_locker(&lr)
-    } else {
-        return nr
-    }
-}
+//fn get_random_free_locker(lr: &[Locker]) -> i16 {
+//    let mut rng = thread_rng();
+//    let nr: i16 = rng.gen_range(0, lr.len() as i16);
+////    println!("Get Random free locker {} {}", nr, lr[nr as usize].is_free());
+//    if !lr[nr as usize].is_free() {
+//        return get_random_free_locker(&lr)
+//    } else {
+//        return nr
+//    }
+//}
 
 fn get_return_time(input_data: &Vec<i16>) -> i16 {
     let mut rng = thread_rng();
@@ -255,8 +263,8 @@ fn detect_encounters(lr: &mut [Locker], encounters: &mut i16) {
 fn detect_focus_encounter(lr: &mut [Locker], id: &i16, encounters: &mut i16) {
     let id = *id as usize;
     if lr[id].had_encounter && !lr[id].focus_counted {
-        *encounters = *encounters + 1;
         lr[id].focus_counted = true;
+        *encounters = *encounters + 1;
     }
 }
 
@@ -286,7 +294,7 @@ fn simulation(input_data: &Vec<i16>, prob_map: &HashMap<i16, f32>) -> (i16, i16,
         if check_new_customer() {
             customers = customers + 1;
             let id: i16 = new_customer(&mut locker_array, i, &mut occupied_lockers, input_data);
-            if FOCUS_BEGIN <= i && i <= FOCUS_END {
+            if FOCUS_BEGIN <= i && i <= FOCUS_END && focus_locker_id == -1 {
                 focus_locker_id = id;
                 locker_array[focus_locker_id as usize].focus = true;
             }
@@ -416,7 +424,7 @@ fn main() {
             sum_foc_enc = sum_foc_enc + a.2 as f32;
         }
     }
-    write_results(results_container.clone());
+    let _ = write_results(results_container.clone());
     println!("{}: {}\n{}: {}ms\n{}:\n\t{}: {}\n\t{}: {}\n\t{}: {}\n\t{}: {}",
              "Runs",
              RUNS,
