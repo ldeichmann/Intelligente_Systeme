@@ -10,14 +10,14 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 
 const RUNS: usize = 10000;
+const NTHREADS: usize = 8;
 const NUM_LOCKERS: usize = 150;
 const TIME_TO_CHANGE: usize = 30; // 5 * 6 = 30
 const MINUTES_TO_UNITS_FACTOR: i16 = 6;
 const RUNTIME: usize = 4320;
-const PROB_THRESHOLD: i16 = 260;
+const PROB_THRESHOLD: i16 = 0;
 const CUSTOMER_PROBABILITY: u8 = 1;
 const CUSTOMER_PROBABILITY_MAX: u8 = 10;
-const NTHREADS: usize = 10;
 const FOCUS_BEGIN: i16 = 1770;
 const FOCUS_END: i16 = 1830;
 
@@ -83,6 +83,11 @@ impl Locker {
     }
 
     pub fn update_probability(&mut self, time: i16, prob_map: &HashMap<i16, f32>) {
+        if self.is_free() {
+            self.encounter_probability = 0.0_f32;
+            return;
+        }
+
         let time_to_check = time-self.occupy_time;
         if self.is_in_use() || time_to_check < PROB_THRESHOLD {
             self.encounter_probability = 1.0;
@@ -105,9 +110,8 @@ impl Locker {
                 self.occupy_locker();
                 self.reset_encounter();
                 self.reset_focus_counted();
-            } else {
-                self.update_probability(time, prob_map);
             }
+            self.update_probability(time, prob_map);
         }
     }
 }
@@ -277,7 +281,7 @@ fn simulation(input_data: &Vec<i16>, prob_map: &HashMap<i16, f32>) -> (i16, i16,
                                                             had_encounter: false,
                                                             focus: false,
                                                             focus_counted: false,
-                                                            encounter_probability: 0.0
+                                                            encounter_probability: 0.0_f32
                                                             };
                                                             NUM_LOCKERS
                                                    ];
