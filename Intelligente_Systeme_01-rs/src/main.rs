@@ -358,9 +358,8 @@ fn gen_prob_map(input_data: &Vec<i16>) -> HashMap<i16, f32>{
             prob_map.insert(tmp, count);
             tmp = *x;
             //            count = 1.0_f32;
-        } else {
-            count = count + 1.0_f32;
         }
+        count = count + 1.0_f32;
     }
     prob_map.insert(tmp, count);
 //    println!("{:?}", prob_map);
