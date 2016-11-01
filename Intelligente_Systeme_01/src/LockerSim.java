@@ -24,10 +24,12 @@ public class LockerSim{
     /**
      * Customer behaviour
      */
-    public static int RUNTIME = 3600; // 10 hours
+    public static int RUNTIME = 4320; // 10 hours
     public static int TIME_TO_CHANGE = 30; // 5 minutes
     public static int NEW_CUSTOMER_PROBABILITY = 1;
     public static int NEW_CUSTOMER_PROBABILITY_RANGE = 10;
+    public static int FOCUS_BEGIN = 1770;
+    public static int FOCUS_END = 1830;
 
     public Locker[] lockers;
     public int time;
@@ -35,6 +37,8 @@ public class LockerSim{
     public int customers;
     private LockerAssign assigner;
     public List<Integer> stats;
+    public int focusId;
+    public int focusEncounter;
 
 
     public LockerSim(List<Integer> stats) {
@@ -46,6 +50,8 @@ public class LockerSim{
         }
         this.time = 0;
         this.encounters = 0;
+        this.focusEncounter = 0;
+        this.focusId = -1;
     }
 
 
@@ -69,17 +75,24 @@ public class LockerSim{
             }
             int returnTime = this.getReturnTime();
             this.lockers[locker].occupy(this.time, this.time+returnTime);
+            if(FOCUS_BEGIN <= this.time  && this.time <= FOCUS_END && this.focusId == -1){
+                this.focusId = locker;
+                this.lockers[this.focusId].focusPerson = true;
+            }
         }
     }
 
     public void checkLockersForEncounter(Locker a, Locker b) {
         if (a.inUse && b.inUse) {
-            if (!a.encounterMap.containsKey(b.id) || !b.encounterMap.containsKey(a.id)) {
+            if (!a.hadEncounter || !b.hadEncounter) {
                 // if this is a new encounter and we have no recollection of it for either locker, increment counter
                 this.encounters++;
+                a.hadEncounter = true;
+                b.hadEncounter = true;
+                if(a.focusPerson || b.focusPerson){
+                    focusEncounter++;
+                }
             }
-            a.encounterMap.put(b.id, b);
-            b.encounterMap.put(a.id, a);
         }
     }
 

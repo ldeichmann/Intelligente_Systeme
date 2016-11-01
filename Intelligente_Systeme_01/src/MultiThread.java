@@ -17,11 +17,15 @@ public class MultiThread implements Runnable{
     public List<Integer> stats;
     public List<Integer> customer;
     public List<Integer> encounters;
+    public List<Integer> focusEncounters;
+    public static final int threads = 4;
+    public static final int runs = 250;
 
     public MultiThread(List<Integer> stats) {
         this.stats = stats;
         this.customer = new LinkedList<>();
         this.encounters = new LinkedList<>();
+        this.focusEncounters = new LinkedList<>();
     }
 
     public void start() {
@@ -29,11 +33,12 @@ public class MultiThread implements Runnable{
         t.start();
     }
     public void run() {
-        for(int i = 0; i < 1000; i++) {
+        for(int i = 0; i < runs; i++) {
             LockerSim sim = new LockerSim(stats);
             sim.update();
             customer.add(sim.customers);
             encounters.add(sim.encounters);
+            focusEncounters.add(sim.focusEncounter);
             //System.out.format("sim1 encounters: %d\nsim1 customers: %d\n", sim.encounters, sim.customers);
         }
         //System.out.format("sim1 encounters: %d\nsim1 customers: %d\n", this.encounters/1000, this.customers/1000);
@@ -59,33 +64,38 @@ public class MultiThread implements Runnable{
     }
 
     public static void main(String[] args) throws Exception{
-        long millis1 = System.currentTimeMillis();
         List<Integer> stats = readStats();
-        List<MultiThread> threads = new LinkedList();
+        List<MultiThread> threadlist = new LinkedList();
         double DCustomer = 0;
         double DEncounters = 0;
-        for(int i = 0; i < 10 ; i++) {
+        double DFocusEncounters = 0;
+        long millis1 = System.currentTimeMillis();
+        for(int i = 0; i < threads ; i++) {
             MultiThread mult = new MultiThread(stats);
             mult.start();
-            threads.add(mult);
+            threadlist.add(mult);
         }
-        for (MultiThread s : threads
+        for (MultiThread s : threadlist
                 ) {
             s.t.join();
         }
-        for (MultiThread s : threads){
+        for (MultiThread s : threadlist){
             for (Integer cust : s.customer){
                 DCustomer += cust;
             }
             for (Integer enc : s.encounters){
                 DEncounters += enc;
             }
+            for (Integer fenc : s.focusEncounters){
+                DFocusEncounters += fenc;
+            }
         }
-        DCustomer = DCustomer/10000;
-        DEncounters = DEncounters/10000;
+        DCustomer = DCustomer/(threads * runs);
+        DEncounters = DEncounters/(threads * runs);
+        DFocusEncounters = DFocusEncounters/(threads * runs);
         //System.out.format("sim1 encounters: %d\nsim1 customers: %d\n", sim1.encounters, sim1.customers);
         long millis2 = System.currentTimeMillis();
         System.out.format("Laufzeit : %d\n", (millis2 - millis1));
-        System.out.format("Durchschnittliche Kunden : %f\n Durchschnittliche Begegnungen : %f\n", DCustomer,DEncounters);
+        System.out.format("Durchschnittliche Kunden : %f\nDurchschnittliche Begegnungen : %f\nDurchschnittliche Begegnungen der Fokusperson : %f\n", DCustomer,DEncounters,DFocusEncounters);
     }
 }

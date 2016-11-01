@@ -10,9 +10,10 @@ public class Locker {
 
     public int id;
     public int state;
-    public Map<Integer, Locker> encounterMap = new HashMap<>();
     public Boolean occupied;
     public Boolean inUse;
+    public Boolean hadEncounter;
+    public Boolean focusPerson;
     private int returnTime;
     private int occupyTime;
 
@@ -25,6 +26,7 @@ public class Locker {
         this.state = 0;
         this.occupied = false;
         this.inUse = false;
+        this.focusPerson = false;
     }
 
     public void occupy(int time, int returnTime) {
@@ -35,6 +37,7 @@ public class Locker {
         this.inUse = true;
         this.state++;
         Locker.occupiedLockers++;
+        this.hadEncounter = false;
     }
 
     public void free () {
@@ -43,14 +46,19 @@ public class Locker {
         this.inUse = false;
         this.state++;
         Locker.occupiedLockers--;
-        this.encounterMap.clear();
+        this.hadEncounter = false;
+        this.focusPerson = false;
     }
 
     public void update(int time) {
+        // customer returns
         if (time == this.returnTime-time_to_change) {
             this.inUse = true;
+            this.hadEncounter = false;
+        // customer leaves
         } else if (time == this.returnTime) {
             this.free();
+        // customer works out
         } else if (time == this.occupyTime+time_to_change) {
             this.inUse = false;
         }
