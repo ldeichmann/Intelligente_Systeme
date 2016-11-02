@@ -298,7 +298,7 @@ fn simulation(input_data: &Vec<i16>, prob_map: &HashMap<i16, f32>) -> (i16, i16,
         if check_new_customer() {
             customers = customers + 1;
             let id: i16 = new_customer(&mut locker_array, i, &mut occupied_lockers, input_data);
-            if FOCUS_BEGIN <= i && i <= FOCUS_END && focus_locker_id == -1 {
+            if FOCUS_BEGIN <= i && focus_locker_id == -1 && id != -1 {
                 focus_locker_id = id;
                 locker_array[focus_locker_id as usize].focus = true;
             }
@@ -306,7 +306,9 @@ fn simulation(input_data: &Vec<i16>, prob_map: &HashMap<i16, f32>) -> (i16, i16,
         // if we were really unlucky and didn't get a focus person, force it
         if i > FOCUS_END && focus_locker_id == -1 {
             focus_locker_id = new_customer(&mut locker_array, i, &mut occupied_lockers, input_data);
-            locker_array[focus_locker_id as usize].focus = true;
+            if focus_locker_id != -1 {
+                locker_array[focus_locker_id as usize].focus = true;
+            }
         }
         detect_encounters(&mut locker_array, &mut encounters);
         if focus_locker_id != -1 && locker_array[focus_locker_id as usize].focus {
