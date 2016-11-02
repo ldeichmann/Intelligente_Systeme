@@ -9,15 +9,16 @@ use std::thread;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 
+const ALGO: usize = 1; // 0 = random - 1 = distributed
 const RUNS: usize = 10000;
 const NTHREADS: usize = 8;
 const NUM_LOCKERS: usize = 150;
 const TIME_TO_CHANGE: usize = 30; // 5 * 6 = 30
 const MINUTES_TO_UNITS_FACTOR: i16 = 6;
 const RUNTIME: usize = 4320;
-const PROB_THRESHOLD: i16 = 0;
-const CUSTOMER_PROBABILITY: u8 = 1;
-const CUSTOMER_PROBABILITY_MAX: u8 = 10;
+//const PROB_THRESHOLD: i16 = 0;
+const CUSTOMER_PROBABILITY: u8 = 10;
+const CUSTOMER_PROBABILITY_MAX: u8 = 100;
 const FOCUS_BEGIN: i16 = 1770;
 const FOCUS_END: i16 = 1830;
 
@@ -89,7 +90,7 @@ impl Locker {
         }
 
         let time_to_check = time-self.occupy_time;
-        if self.is_in_use() || time_to_check < PROB_THRESHOLD {
+        if self.is_in_use() {
             self.encounter_probability = 1.0;
         } else if prob_map.contains_key(&(time_to_check)) {
             self.encounter_probability = *prob_map.get(&(time_to_check)).unwrap();
@@ -132,7 +133,7 @@ fn update_lockers(lr: &mut [Locker], time: i16, occupied_lockers: &mut i16, prob
 fn check_new_customer() -> bool {
     let mut rng = thread_rng();
     let cst: u8 = rng.gen_range(1, CUSTOMER_PROBABILITY_MAX+1);
-    cst == CUSTOMER_PROBABILITY
+    cst <= CUSTOMER_PROBABILITY
 }
 
 fn get_free_locker(lr: &[Locker]) -> i16 {
@@ -184,16 +185,16 @@ fn get_free_locker(lr: &[Locker]) -> i16 {
     min_pos as i16
 }
 
-//fn get_random_free_locker(lr: &[Locker]) -> i16 {
-//    let mut rng = thread_rng();
-//    let nr: i16 = rng.gen_range(0, lr.len() as i16);
-////    println!("Get Random free locker {} {}", nr, lr[nr as usize].is_free());
-//    if !lr[nr as usize].is_free() {
-//        return get_random_free_locker(&lr)
-//    } else {
-//        return nr
-//    }
-//}
+fn get_random_free_locker(lr: &[Locker]) -> i16 {
+    let mut rng = thread_rng();
+    let nr: i16 = rng.gen_range(0, lr.len() as i16);
+//    println!("Get Random free locker {} {}", nr, lr[nr as usize].is_free());
+    if !lr[nr as usize].is_free() {
+        return get_random_free_locker(&lr)
+    } else {
+        return nr
+    }
+}
 
 fn get_return_time(input_data: &Vec<i16>) -> i16 {
     let mut rng = thread_rng();
@@ -206,8 +207,12 @@ fn new_customer(lr: &mut [Locker], time: i16, occupied_lockers: &mut i16, input_
         println!("Error: All lockers occupied");
         -1
     } else {
-//        let locker_number = get_random_free_locker(lr);
-        let locker_number = get_free_locker(lr);
+        let mut locker_number: i16 = -1;
+        if ALGO == 0 {
+            locker_number = get_random_free_locker(lr);
+        } else if ALGO == 1 {
+            locker_number = get_free_locker(lr);
+        }
         lr[(locker_number as usize)].assign_locker(time, time+get_return_time(input_data));
         *occupied_lockers = *occupied_lockers + 1;
         locker_number
