@@ -10,6 +10,7 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 
 const ALGO: usize = 1; // 0 = random - 1 = distributed
+const EXIT_AFTER_FOCUS: bool = false;
 const RUNS: usize = 10000;
 const NTHREADS: usize = 8;
 const NUM_LOCKERS: usize = 150;
@@ -313,6 +314,13 @@ fn simulation(input_data: &Vec<i16>, prob_map: &HashMap<i16, f32>) -> (i16, i16,
             focus_locker_id = new_customer(&mut locker_array, i, &mut occupied_lockers, input_data);
             if focus_locker_id != -1 {
                 locker_array[focus_locker_id as usize].focus = true;
+            }
+        }
+        if EXIT_AFTER_FOCUS {
+            if i > FOCUS_END && focus_locker_id != -1 {
+                if !locker_array[focus_locker_id as usize].focus {
+                    return (customers, encounters, focus_encounters);
+                }
             }
         }
         detect_encounters(&mut locker_array, &mut encounters);
