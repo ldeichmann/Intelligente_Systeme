@@ -40,6 +40,7 @@ public class LockerSim{
     /**
      * Constructor
      * Initializes Assigner (Possible Strategies: LockerAssignDistributed() or LockerAssignRandom())
+     * Array of lockers, because the size of this structure is static for the runtime
      * @param stats
      * @param map
      */
