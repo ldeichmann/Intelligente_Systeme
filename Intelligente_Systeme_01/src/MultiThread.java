@@ -2,10 +2,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class MultiThread implements Runnable{
@@ -48,6 +45,7 @@ public class MultiThread implements Runnable{
     /**
      * runs a specified amount of simulations(each one day)
      * adds overall encounters per day, focus person encounters and overall customers per day in a list
+     * Used Linkedlist to add an entry fast
      */
     public void run() {
         for(int i = 0; i < runs; i++) {
@@ -61,11 +59,12 @@ public class MultiThread implements Runnable{
 
     /**
      * reads a statistical survey of possible occupy times and frequency of this time of customers
+     * Used ArrayList as datastructure to save every entry, as we can get every entry in O(1)
      * @return list of possible occupy times and frequency of this time of customers
      */
     public static List<Integer> readStats() {
         Path path = Paths.get("Belegungszeiten.txt");
-        List<Integer> list = new LinkedList<>();
+        List<Integer> list = new ArrayList<>();
         try (Stream<String> lines = Files.lines(path)) {
             lines.skip(1).forEach(s -> {
                 int time = Integer.parseInt(s.split(" ")[0]);
@@ -84,6 +83,7 @@ public class MultiThread implements Runnable{
     /**
      * gets a statistical survey of possible occupy times and frequency of this time of customers
      * rearrange the list in a map with the key being the time and value being the times of entry/overall entry
+     * Used HashMap as we have key value pairs (no entry more than once)
      * @return list of possible occupy times and probability of this time of customers
      */
     public static Map<Integer, Float> generateDistributionMap(List<Integer> list){
