@@ -21,9 +21,16 @@ public class MultiThread implements Runnable{
     public List<Integer> customer;
     public List<Integer> encounters;
     public List<Integer> focusEncounters;
+    //number of threads running
     public static final int threads = 4;
+    //number of days each thread simulates
     public static final int runs = 250;
 
+    /**
+     * constructor
+     * @param stats
+     * @param distributionMap
+     */
     public MultiThread(List<Integer> stats, Map<Integer, Float> distributionMap) {
         this.stats = stats;
         this.distributionMap = distributionMap;
@@ -32,10 +39,19 @@ public class MultiThread implements Runnable{
         this.focusEncounters = new LinkedList<>();
     }
 
+    /**
+     * start for Multithreading
+     * calls run
+     */
     public void start() {
-        t = new Thread(this, "test");
+        t = new Thread(this, "Simulation");
         t.start();
     }
+
+    /**
+     * runs a specified amount of simulations(each one day)
+     * adds overall encounters per day, focus person encounters and overall customers per day in a list
+     */
     public void run() {
         for(int i = 0; i < runs; i++) {
             LockerSim sim = new LockerSim(stats, distributionMap);
@@ -43,11 +59,13 @@ public class MultiThread implements Runnable{
             customer.add(sim.customers);
             encounters.add(sim.encounters);
             focusEncounters.add(sim.focusEncounter);
-            //System.out.format("sim1 encounters: %d\nsim1 customers: %d\n", sim.encounters, sim.customers);
-        }
-        //System.out.format("sim1 encounters: %d\nsim1 customers: %d\n", this.encounters/1000, this.customers/1000);
+       }
     }
 
+    /**
+     * reads a statistical survey of possible occupy times and frequency of this time of customers
+     * @return list of possible occupy times and frequency of this time of customers
+     */
     public static List<Integer> readStats() {
         Path path = Paths.get("Belegungszeiten.txt");
         List<Integer> list = new LinkedList<>();
@@ -66,6 +84,11 @@ public class MultiThread implements Runnable{
         return list;
     }
 
+    /**
+     * gets a statistical survey of possible occupy times and frequency of this time of customers
+     * rearrange the list in a map with the key being the time and value being the times of entry/overall entry
+     * @return list of possible occupy times and probability of this time of customers
+     */
     public static Map<Integer, Float> generateDistributionMap(List<Integer> list){
         Map<Integer, Float> distributionMap = new HashMap<>();
         int temp = list.get(0);
@@ -90,7 +113,6 @@ public class MultiThread implements Runnable{
     public static void main(String[] args) throws Exception{
         List<Integer> stats = readStats();
         Map<Integer, Float> distributionMap = generateDistributionMap(stats);
-        System.out.println(distributionMap);
         List<MultiThread> threadlist = new LinkedList();
         double DCustomer = 0;
         double DEncounters = 0;
@@ -119,7 +141,6 @@ public class MultiThread implements Runnable{
         DCustomer = DCustomer/(threads * runs);
         DEncounters = DEncounters/(threads * runs);
         DFocusEncounters = DFocusEncounters/(threads * runs);
-        //System.out.format("sim1 encounters: %d\nsim1 customers: %d\n", sim1.encounters, sim1.customers);
         long millis2 = System.currentTimeMillis();
         System.out.format("Laufzeit : %d\n", (millis2 - millis1));
         System.out.format("Durchschnittliche Kunden : %f\nDurchschnittliche Begegnungen : %f\nDurchschnittliche Begegnungen der Fokusperson : %f\n", DCustomer,DEncounters,DFocusEncounters);

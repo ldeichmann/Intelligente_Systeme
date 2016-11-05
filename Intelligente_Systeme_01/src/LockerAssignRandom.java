@@ -6,11 +6,22 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class LockerAssignRandom implements LockerAssign{
 
+    /**
+     * calls getRandomFreelocker
+     * @param lockers
+     * @return randome free locker
+     */
     public int assignLocker(Locker[] lockers) {
         return getRandomFreeLocker(lockers);
     }
 
 
+    /**
+     * checks for a random locker
+     * returns this locker if locker is free
+     * @param lockers
+     * @return free locker
+     */
     public int getRandomFreeLocker(Locker[] lockers) {
         int randomNumber = ThreadLocalRandom.current().nextInt(0, lockers.length);
         if (!lockers[randomNumber].occupied) {

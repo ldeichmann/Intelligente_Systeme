@@ -20,6 +20,11 @@ public class Locker {
 
     private int time_to_change;
 
+    /**
+     * Constructor
+     * @param id
+     * @param time_to_change
+     */
     public Locker(int id, int time_to_change) {
         this.id = id;
         this.time_to_change = time_to_change;
@@ -31,6 +36,11 @@ public class Locker {
         this.encounterProbability = 0;
     }
 
+    /**
+     * Setter for occupy time
+     * @param time
+     * @param returnTime
+     */
     public void occupy(int time, int returnTime) {
         //System.out.format("Locker %d occupied, free at %d\n", id, returnTime);
         this.returnTime = returnTime;
@@ -42,6 +52,9 @@ public class Locker {
         this.hadEncounter = false;
     }
 
+    /**
+     * reset for locker
+     */
     public void free () {
         //System.out.format("Locker %d freed\n", id);
         this.occupied = false;
@@ -52,6 +65,12 @@ public class Locker {
         this.focusPerson = false;
     }
 
+    /**
+     * update on locker
+     * check if locker is still inUse(costumer is changing)
+     * @param time
+     * @param distributionMap
+     */
     public void update(int time, Map<Integer, Float> distributionMap) {
         // customer returns
         if (time == this.returnTime-time_to_change) {
@@ -67,6 +86,14 @@ public class Locker {
         this.update_probability(time, distributionMap);
     }
 
+    /**
+     * Sets the probability
+     * 0 if not occupied
+     * 1 if inUse
+     * gets the encounterProbability from the distributionMap
+     * @param time
+     * @param distributionMap
+     */
     public void update_probability(int time, Map<Integer, Float> distributionMap){
         if (!this.occupied) {
             this.encounterProbability = 0;

@@ -6,10 +6,22 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class LockerAssignDistributed implements LockerAssign{
 
+    /**
+     * calls getBestLocker
+     * @param lockers
+     * @return best possible locker
+     */
     public int assignLocker(Locker[] lockers) {
         return getBestLocker(lockers);
     }
 
+    /**
+     * Checks which lockers are occupied and which not
+     * List of lockers is going to be iterated and if one locker is free, it will be rated
+     * check for every possible scenario (scenarios: locker is one of the first 2/ locker is one of the last 2/ locker is one the first or second row)
+     * @param lockers
+     * @return locker with best rating
+     */
     public int getBestLocker(Locker[] lockers) {
         int min_pos = 0;
         float min_val = 200;

@@ -2,7 +2,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +40,12 @@ public class LockerSim{
     public int focusEncounter;
     public Map<Integer, Float> distributionMap;
 
-
+    /**
+     * Constructor
+     * Initializes Assigner (Possible Strategies: LockerAssignDistributed() or LockerAssignRandom())
+     * @param stats
+     * @param map
+     */
     public LockerSim(List<Integer> stats, Map<Integer, Float> map) {
         this.stats = stats;
         this.distributionMap = map;
@@ -56,16 +60,27 @@ public class LockerSim{
         this.focusId = -1;
     }
 
-
+    /**
+     * Declares if a new customer is arriving
+     * Edit NEW_CUSTOMER_PROBABILITY_RANGE to increase or decrease probability
+     * @return boolean
+     */
     public Boolean isNewCustomer() {
         return ThreadLocalRandom.current().nextInt(1, NEW_CUSTOMER_PROBABILITY_RANGE + 1) == NEW_CUSTOMER_PROBABILITY;
     }
 
-
+    /**
+     * Gets a random time frame from the list of possible time frames of a customer
+     * @return time a customer occupies a locker
+     */
     public int getReturnTime() {
         return this.stats.get(ThreadLocalRandom.current().nextInt(0, this.stats.size()));
     }
 
+    /**
+     * Assigns arriving customers to a locker
+     * Assigns focus person to a locker
+     */
     public void newCustomer() {
         if (isNewCustomer()) {
             //System.out.println("NEW_CUSTOMER");
@@ -84,6 +99,11 @@ public class LockerSim{
         }
     }
 
+    /**
+     * Checking for encounters on both lockers (for customer and focus person)
+     * @param a
+     * @param b
+     */
     public void checkLockersForEncounter(Locker a, Locker b) {
         if (a.inUse && b.inUse) {
             if (!a.hadEncounter || !b.hadEncounter) {
@@ -98,6 +118,11 @@ public class LockerSim{
         }
     }
 
+    /**
+     * Checks which lockers have to be checked for encounters
+     * List of lockers is going to be iterated and if one locker is currently used(locker is inUse, if customer is changing)
+     * check for every possible scenario (scenarios: locker is one of the first 2/ locker is one of the last 2/ locker is one the first or second row)
+     */
     public void detectEncounters() {
         for (int i = 0; i < LOCKER_NUM; i++) {
             // if Locker is in use, let's look around
@@ -148,13 +173,20 @@ public class LockerSim{
                 }
             }
         }
-//        System.out.println("DETECT ENCOUNTERS!");
     }
 
+    /**
+     * start for Sim
+     */
     public void start() {
             this.update();
     }
 
+    /**
+     * Updater
+     * updates every locker, checks if customer is arriving and calls method to check for encounters
+     * increments time by 1(10 seconds)
+     */
     public void update() {
         //System.out.format("Update! time: %d\n", this.time);
         for (Locker l : this.lockers) {
@@ -166,24 +198,6 @@ public class LockerSim{
         if (this.time < this.RUNTIME) {
             this.update();
         }
-    }
-
-    public static List<Integer> readStats() {
-        Path path = Paths.get("Belegungszeiten.txt");
-        List<Integer> list = new LinkedList<>();
-        try (Stream<String> lines = Files.lines(path)) {
-            lines.skip(1).forEach(s -> {
-                int time = Integer.parseInt(s.split(" ")[0]);
-                int people = Integer.parseInt(s.split(" ")[1]);
-                for (int j = 0; j < people; j++) {
-                    list.add(time*6);
-                }
-            });
-        } catch (IOException ex) {
-            System.out.println(ex);
-            System.out.println("File things failed, sorry.");
-        }
-        return list;
     }
 
 }
