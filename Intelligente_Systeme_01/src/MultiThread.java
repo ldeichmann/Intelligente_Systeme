@@ -10,8 +10,11 @@ public class MultiThread implements Runnable{
      * Threading
      */
     private Thread t;
+    //Used ArrayList as datastructure to save every entry, as we can get every entry in O(1)
     public List<Integer> stats;
+    //Used HashMap as we have key value pairs (no entry more than once)
     public Map<Integer, Float> distributionMap;
+    //Used Linkedlist to add an entry fast
     public List<Integer> customer;
     public List<Integer> encounters;
     public List<Integer> focusEncounters;
@@ -22,7 +25,6 @@ public class MultiThread implements Runnable{
 
     /**
      * constructor
-     * Used Linkedlist to add an entry fast
      * @param stats
      * @param distributionMap
      */
@@ -59,7 +61,6 @@ public class MultiThread implements Runnable{
 
     /**
      * reads a statistical survey of possible occupy times and frequency of this time of customers
-     * Used ArrayList as datastructure to save every entry, as we can get every entry in O(1)
      * @return list of possible occupy times and frequency of this time of customers
      */
     public static List<Integer> readStats() {
@@ -83,7 +84,6 @@ public class MultiThread implements Runnable{
     /**
      * gets a statistical survey of possible occupy times and frequency of this time of customers
      * rearrange the list in a map with the key being the time and value being the times of entry/overall entry
-     * Used HashMap as we have key value pairs (no entry more than once)
      * @return list of possible occupy times and probability of this time of customers
      */
     public static Map<Integer, Float> generateDistributionMap(List<Integer> list){

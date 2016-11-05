@@ -27,6 +27,7 @@ public class LockerSim{
     public static int FOCUS_BEGIN = 1770;
     public static int FOCUS_END = 1830;
 
+    //Array of lockers, because the size of this structure is static for the runtime
     public Locker[] lockers;
     public int time;
     public int encounters;
@@ -40,7 +41,6 @@ public class LockerSim{
     /**
      * Constructor
      * Initializes Assigner (Possible Strategies: LockerAssignDistributed() or LockerAssignRandom())
-     * Array of lockers, because the size of this structure is static for the runtime
      * @param stats
      * @param map
      */
