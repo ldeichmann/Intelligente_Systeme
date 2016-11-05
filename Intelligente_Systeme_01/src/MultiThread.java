@@ -22,6 +22,7 @@ public class MultiThread implements Runnable{
 
     /**
      * constructor
+     * Used Linkedlist to add an entry fast
      * @param stats
      * @param distributionMap
      */
@@ -45,7 +46,6 @@ public class MultiThread implements Runnable{
     /**
      * runs a specified amount of simulations(each one day)
      * adds overall encounters per day, focus person encounters and overall customers per day in a list
-     * Used Linkedlist to add an entry fast
      */
     public void run() {
         for(int i = 0; i < runs; i++) {
