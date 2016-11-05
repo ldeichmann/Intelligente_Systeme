@@ -490,7 +490,7 @@ fn main() {
 
 
     let mut children = vec![];
-    let results_vec: Vec<(i16, i16, i16, i16)> = vec![];
+    let results_vec: Vec<(i16, i16, i16, i16)> = Vec::with_capacity(RUNS);
     // wrap results into arc mutex for thread safety
     let results_container = Arc::new(Mutex::new(results_vec));
     let tm3 = precise_time_ns();
@@ -501,7 +501,7 @@ fn main() {
         let total_data = results_container.clone();
         children.push(thread::spawn(move || {
             let mut j = 0;
-            let mut results: Vec<(i16, i16, i16, i16)> = vec![];
+            let mut results: Vec<(i16, i16, i16, i16)> = Vec::with_capacity(RUNS/NTHREADS);;
             while j < RUNS/NTHREADS {
                 results.push(simulation(&i_data.clone(), &prob_map_clone.clone() ));
                 j = j + 1;
