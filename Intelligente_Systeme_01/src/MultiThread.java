@@ -10,11 +10,8 @@ public class MultiThread implements Runnable{
      * Threading
      */
     private Thread t;
-    //Used ArrayList as datastructure to save every entry, as we can get every entry in O(1)
     public List<Integer> stats;
-    //Used HashMap as we have key value pairs (no entry more than once)
     public Map<Integer, Float> distributionMap;
-    //Used Linkedlist to add an entry fast
     public List<Integer> customer;
     public List<Integer> encounters;
     public List<Integer> focusEncounters;
@@ -31,6 +28,7 @@ public class MultiThread implements Runnable{
     public MultiThread(List<Integer> stats, Map<Integer, Float> distributionMap) {
         this.stats = stats;
         this.distributionMap = distributionMap;
+        //Used Linkedlists to add entries fast
         this.customer = new LinkedList<>();
         this.encounters = new LinkedList<>();
         this.focusEncounters = new LinkedList<>();
@@ -65,6 +63,7 @@ public class MultiThread implements Runnable{
      */
     public static List<Integer> readStats() {
         Path path = Paths.get("Belegungszeiten.txt");
+        //Used ArrayList as datastructure to save every entry, as we can get every entry in O(1)
         List<Integer> list = new ArrayList<>();
         try (Stream<String> lines = Files.lines(path)) {
             lines.skip(1).forEach(s -> {
@@ -87,6 +86,7 @@ public class MultiThread implements Runnable{
      * @return list of possible occupy times and probability of this time of customers
      */
     public static Map<Integer, Float> generateDistributionMap(List<Integer> list){
+        //Used HashMap as we have key value pairs (no entry more than once)
         Map<Integer, Float> distributionMap = new HashMap<>();
         int temp = list.get(0);
         float count = 0;
