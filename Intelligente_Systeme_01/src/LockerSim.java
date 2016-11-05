@@ -8,9 +8,6 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
-/**
- * Created by cru on 10/23/16.
- */
 public class LockerSim{
 
 

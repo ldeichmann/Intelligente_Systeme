@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-/**
- * Created by Adrian on 27.10.2016.
- */
 public class MultiThread implements Runnable{
     /**
      * Threading

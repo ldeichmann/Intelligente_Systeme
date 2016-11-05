@@ -1,9 +1,6 @@
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by cru on 10/23/16.
- */
 public class Locker {
 
     public static int occupiedLockers = 0;

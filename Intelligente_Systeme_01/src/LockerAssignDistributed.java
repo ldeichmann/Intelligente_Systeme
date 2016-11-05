@@ -1,9 +1,6 @@
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Created by cru on 10/23/16.
- */
 public class LockerAssignDistributed implements LockerAssign{
 
     /**
