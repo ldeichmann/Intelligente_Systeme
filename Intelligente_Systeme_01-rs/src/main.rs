@@ -123,7 +123,7 @@ impl Locker {
             return;
         }
 
-        let time_to_check = time-self.occupy_time;
+        let time_to_check = time-self.occupy_time+(TIME_TO_CHANGE as i16);
         if self.is_in_use() {
             self.encounter_probability = 1.0;
         } else if prob_map.contains_key(&(time_to_check)) {
