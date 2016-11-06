@@ -18,7 +18,7 @@ public class MultiThread implements Runnable{
     //number of threads running
     public static final int threads = 4;
     //number of days each thread simulates
-    public static final int runs = 250;
+    public static final int runs = 2500;
 
     /**
      * constructor
