@@ -11,6 +11,7 @@ use std::collections::HashMap;
 
 const ALGO: usize = 1; // 0 = random - 1 = distributed
 const EXIT_AFTER_FOCUS: bool = true; // exit after focus person left
+const DETECT_ONLY_FOCUS_ENCOUNTERS: bool = true; // detect only focus persons encounters, somewhat reduces runtime
 const RUNS: usize = 10000; // total runs in days
 const NTHREADS: usize = 8; // number of threads to create
 const NUM_LOCKERS: usize = 150; // number of lockers to simulate
@@ -292,41 +293,46 @@ fn has_encounter(lr: &mut [Locker], encounters: &mut i16, a: usize, b: usize) {
     }
 }
 
-/// Detects encounters between all lockers
-fn detect_encounters(lr: &mut [Locker], encounters: &mut i16) {
+fn detect_all_encounters(lr: &mut [Locker], encounters: &mut i16) {
     for x in 0..(lr.len()-1 as usize) {
-        if !lr[x].is_free() {
-            if x == 0 {
-                has_encounter(&mut *lr, &mut *encounters, x, x+1);
-                has_encounter(&mut *lr, &mut *encounters, x, x+2);
-                has_encounter(&mut *lr, &mut *encounters, x, x+3);
-            } else if x == 1 {
-                has_encounter(&mut *lr, &mut *encounters, x, x-1);
-                has_encounter(&mut *lr, &mut *encounters, x, x+1);
-                has_encounter(&mut *lr, &mut *encounters, x, x+2);
-            } else if x == NUM_LOCKERS-1 {
-                has_encounter(&mut *lr, &mut *encounters, x, x-1);
-                has_encounter(&mut *lr, &mut *encounters, x, x-2);
-                has_encounter(&mut *lr, &mut *encounters, x, x-3);
-            } else if x == NUM_LOCKERS-2 {
-                has_encounter(&mut *lr, &mut *encounters, x, x+1);
-                has_encounter(&mut *lr, &mut *encounters, x, x-1);
-                has_encounter(&mut *lr, &mut *encounters, x, x-2);
-            } else if (x % 2) == 0 {
-                has_encounter(&mut *lr, &mut *encounters, x, x-2);
-                has_encounter(&mut *lr, &mut *encounters, x, x-1);
-                has_encounter(&mut *lr, &mut *encounters, x, x+1);
-                has_encounter(&mut *lr, &mut *encounters, x, x+2);
-                has_encounter(&mut *lr, &mut *encounters, x, x+3);
-            } else if (x % 2) == 1 {
-                has_encounter(&mut *lr, &mut *encounters, x, x-3);
-                has_encounter(&mut *lr, &mut *encounters, x, x-2);
-                has_encounter(&mut *lr, &mut *encounters, x, x-1);
-                has_encounter(&mut *lr, &mut *encounters, x, x+1);
-                has_encounter(&mut *lr, &mut *encounters, x, x+2);
-            } else {
-                println!("This is why you don't freeze time, you guys. It's incredibly irresponsible.")
-            }
+        detect_encounters(lr, encounters, &x);
+    }
+}
+
+/// Detects encounters between all lockers
+fn detect_encounters(lr: &mut [Locker], encounters: &mut i16, ln: &usize) {
+    let x = *ln;
+    if !lr[x].is_free() {
+        if x == 0 {
+            has_encounter(&mut *lr, &mut *encounters, x, x+1);
+            has_encounter(&mut *lr, &mut *encounters, x, x+2);
+            has_encounter(&mut *lr, &mut *encounters, x, x+3);
+        } else if x == 1 {
+            has_encounter(&mut *lr, &mut *encounters, x, x-1);
+            has_encounter(&mut *lr, &mut *encounters, x, x+1);
+            has_encounter(&mut *lr, &mut *encounters, x, x+2);
+        } else if x == NUM_LOCKERS-1 {
+            has_encounter(&mut *lr, &mut *encounters, x, x-1);
+            has_encounter(&mut *lr, &mut *encounters, x, x-2);
+            has_encounter(&mut *lr, &mut *encounters, x, x-3);
+        } else if x == NUM_LOCKERS-2 {
+            has_encounter(&mut *lr, &mut *encounters, x, x+1);
+            has_encounter(&mut *lr, &mut *encounters, x, x-1);
+            has_encounter(&mut *lr, &mut *encounters, x, x-2);
+        } else if (x % 2) == 0 {
+            has_encounter(&mut *lr, &mut *encounters, x, x-2);
+            has_encounter(&mut *lr, &mut *encounters, x, x-1);
+            has_encounter(&mut *lr, &mut *encounters, x, x+1);
+            has_encounter(&mut *lr, &mut *encounters, x, x+2);
+            has_encounter(&mut *lr, &mut *encounters, x, x+3);
+        } else if (x % 2) == 1 {
+            has_encounter(&mut *lr, &mut *encounters, x, x-3);
+            has_encounter(&mut *lr, &mut *encounters, x, x-2);
+            has_encounter(&mut *lr, &mut *encounters, x, x-1);
+            has_encounter(&mut *lr, &mut *encounters, x, x+1);
+            has_encounter(&mut *lr, &mut *encounters, x, x+2);
+        } else {
+            println!("This is why you don't freeze time, you guys. It's incredibly irresponsible.")
         }
     }
 }
@@ -392,8 +398,13 @@ fn simulation(input_data: &Vec<i16>, prob_map: &HashMap<i16, f32>) -> (i16, i16,
                 }
             }
         }
-        detect_encounters(&mut locker_array, &mut encounters);
+        if !DETECT_ONLY_FOCUS_ENCOUNTERS {
+            detect_all_encounters(&mut locker_array, &mut encounters);
+        }
         if focus_locker_id != -1 && locker_array[focus_locker_id as usize].focus {
+            if DETECT_ONLY_FOCUS_ENCOUNTERS {
+                detect_encounters(&mut locker_array, &mut encounters, &(focus_locker_id as usize));
+            }
             detect_focus_encounter(&mut locker_array, &focus_locker_id, &mut focus_encounters)
         }
         i = i + 1;
