@@ -16,6 +16,7 @@ public class LockerSim{
      */
     public static int LOCKER_NUM = 150;
     public static int LOCKER_ROWS = 2;
+    public static boolean EXIT_AFTER_FOCUS = false;
 
     /**
      * Customer behaviour
@@ -193,9 +194,24 @@ public class LockerSim{
         this.newCustomer();
         this.detectEncounters();
         this.time++;
+        /*
+        if EXIT_AFTER_FOCUS {
+            if i > FOCUS_END && focus_locker_id != -1 {
+                if !locker_array[focus_locker_id as usize].focus {
+                    return (i, customers, encounters, focus_encounters);
+                }
+            }
+        }
+         */
+        if(EXIT_AFTER_FOCUS) {
+            if (this.time > FOCUS_END && focusId != -1) {
+                if (!lockers[focusId].focusPerson) {
+                    return;
+                }
+            }
+        }
         if (this.time < this.RUNTIME) {
             this.update();
         }
     }
-
 }

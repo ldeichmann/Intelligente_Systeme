@@ -100,7 +100,7 @@ public class Locker {
         }
         else {
             if(distributionMap.containsKey(time - this.occupyTime)){
-                this.encounterProbability = distributionMap.get(time - this.occupyTime);
+                this.encounterProbability = distributionMap.get(time - this.occupyTime + time_to_change);
             }
         }
     }

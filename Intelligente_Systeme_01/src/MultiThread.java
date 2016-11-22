@@ -51,8 +51,10 @@ public class MultiThread implements Runnable{
         for(int i = 0; i < runs; i++) {
             LockerSim sim = new LockerSim(stats, distributionMap);
             sim.update();
-            customer.add(sim.customers);
-            encounters.add(sim.encounters);
+            if(!sim.EXIT_AFTER_FOCUS) {
+                customer.add(sim.customers);
+                encounters.add(sim.encounters);
+            }
             focusEncounters.add(sim.focusEncounter);
        }
     }
@@ -140,6 +142,11 @@ public class MultiThread implements Runnable{
         DFocusEncounters = DFocusEncounters/(threads * runs);
         long millis2 = System.currentTimeMillis();
         System.out.format("Laufzeit : %d\n", (millis2 - millis1));
-        System.out.format("Durchschnittliche Kunden : %f\nDurchschnittliche Begegnungen : %f\nDurchschnittliche Begegnungen der Fokusperson : %f\n", DCustomer,DEncounters,DFocusEncounters);
+        if(DEncounters == 0){
+            System.out.format("Durchschnittliche Begegnungen der Fokusperson : %f\n", DFocusEncounters);
+        }
+        else {
+            System.out.format("Durchschnittliche Kunden : %f\nDurchschnittliche Begegnungen : %f\nDurchschnittliche Begegnungen der Fokusperson : %f\n", DCustomer, DEncounters, DFocusEncounters);
+        }
     }
 }
