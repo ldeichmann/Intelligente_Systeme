@@ -11,9 +11,9 @@ x1 <- ml[,1]
 y1 <- ml[,2]
 z <- matrix()
 len <- length(x1)
-for(i in 1:139)
+for(i in 1:len)
 {
-  z[i] <- m[y1[i],x1[i]]
+  z[i] <- m[y1[i]+1,x1[i]+1]
 }
 
 
