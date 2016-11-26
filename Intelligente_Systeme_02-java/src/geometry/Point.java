@@ -1,5 +1,8 @@
 package geometry;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Class which represents a point in a three-dimensional space.
  */
@@ -125,4 +128,86 @@ public class Point {
                 ", flag=" + flag +
                 '}';
     }
+
+    /**
+     * Returns a list containing points which are connected to this point regarding to x- and y-coordinates
+     * @param step  the layer of the connected points
+     * @return  the list containing the points which are connected to this point
+     */
+    public List<Point> getNearPoints(int step) {
+        List<Point> returnList = new ArrayList<>();
+
+        if (step < 1) {
+            return returnList;
+        }
+        List<Integer> innerList = new ArrayList<>();
+        List<Integer> outerList = new ArrayList<>();
+        outerList.add(step);
+        outerList.add((-1) * step);
+        innerList.add(0);
+        for (int i = 1; i < step; i++) {
+            innerList.add(i);
+            innerList.add((-1) * i);
+        }
+
+        for (int i = 0; i < 2; i++) {
+            returnList.add(new Point(this.getX() + outerList.get(i), this.getY() + outerList.get(i), this.getZ()));
+            returnList.add(new Point(this.getX() + outerList.get(i), this.getY() - outerList.get(i), this.getZ()));
+            for (int k = 0; k < innerList.size(); k++) {
+                returnList.add(new Point(this.getX() + outerList.get(i), this.getY() + innerList.get(k), this.getZ()));
+                returnList.add(new Point(this.getX() + innerList.get(k), this.getY() + outerList.get(i), this.getZ()));
+            }
+        }
+
+        return returnList;
+    }
+
+    /**
+     * Adds all tagged points belonging to the same cluster as this point to the current cluster
+     * @param taggedPoints a list containing all tagged points
+     * @param currentCluster a list containing all points of the current cluster
+     */
+    private void getClusterRecurr(List<Point> taggedPoints, List<Point> currentCluster) {
+        List<Point> nearPoints = this.getNearPoints(1);
+        List<Point> newPoints = new ArrayList<>();
+        for (Point point : nearPoints) {
+            if (!currentCluster.contains(point) && taggedPoints.contains(point)) {
+                newPoints.add(point);
+            }
+        }
+        if (newPoints.size() != 0) {
+            for (Point point : newPoints) {
+                currentCluster.add(point);
+            }
+            for (Point point : newPoints) {
+                point.getClusterRecurr(taggedPoints, currentCluster);
+            }
+        }
+    }
+
+    /**
+     * Returns the tagged points divided into clusters
+     * @param taggedPoints  a list containing the tagged points
+     * @return a list of lists containing the clusters of the tagged points
+     */
+    public static List<List<Point>> getAllCluster(List<Point> taggedPoints) {
+        List<List<Point>> returnList = new ArrayList<>();
+        List<Point> newTaggedPoints = new ArrayList<>();
+        for (Point point : taggedPoints) {
+            newTaggedPoints.add(point);
+        }
+
+        while (newTaggedPoints.size() != 0) {
+            List<Point> clusterList = new ArrayList<>();
+            clusterList.add(newTaggedPoints.get(0));
+            newTaggedPoints.get(0).getClusterRecurr(newTaggedPoints, clusterList);
+            returnList.add(clusterList);
+            for (Point point : clusterList) {
+                newTaggedPoints.remove(point);
+            }
+        }
+
+        return returnList;
+    }
+
 }
