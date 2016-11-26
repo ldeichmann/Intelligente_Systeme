@@ -5,7 +5,6 @@ import com.univocity.parsers.csv.CsvParserSettings;
 import geometry.Point;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +20,7 @@ public class csv {
      * @param file  the csv to read the points from
      * @return  a list containing the points
      */
-    public static List<Point> getPointsFromCSV(FileReader file) {
+    public static List<Point> getPointsFromCSV(File file) {
         List<Point> returnList = new ArrayList<>();
 
         CsvParserSettings settings = new CsvParserSettings();
