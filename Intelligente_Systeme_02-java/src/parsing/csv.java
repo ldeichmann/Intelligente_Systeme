@@ -4,7 +4,10 @@ import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import geometry.Point;
 
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +38,29 @@ public class csv {
         }
 
         return returnList;
+    }
+
+    /**
+     * Writes given points to a csv
+     * @param file  the file to write the points to
+     * @param pointList the list containing the points
+     * @param withZCoordinate   {@code true} if the z-coordinate should be written into the file, {@code false} otherwise
+     */
+    public static void writePointstoCSV(File file, List<Point> pointList, boolean withZCoordinate) {
+        try {
+            FileWriter fileWriter = new FileWriter(file);
+            String outputstring = "";
+            for (Point point : pointList) {
+                if (withZCoordinate) {
+                    outputstring += String.valueOf(point.getX()) + "," + String.valueOf(point.getY()) + "," + String.valueOf(point.getZ()) + "\n";
+                } else {
+                    outputstring += String.valueOf(point.getX()) + "," + String.valueOf(point.getY()) + "\n";
+                }
+            }
+            fileWriter.write(outputstring);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (IOException ignored) {}
     }
 
 }
