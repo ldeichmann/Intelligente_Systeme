@@ -100,9 +100,7 @@ public class Point {
         Point point = (Point) o;
 
         if (Double.compare(point.getX(), getX()) != 0) return false;
-        if (Double.compare(point.getY(), getY()) != 0) return false;
-        if (Double.compare(point.getZ(), getZ()) != 0) return false;
-        return getFlag() == point.getFlag();
+        return Double.compare(point.getY(), getY()) == 0;
     }
 
     @Override
@@ -113,9 +111,6 @@ public class Point {
         result = (int) (temp ^ (temp >>> 32));
         temp = Double.doubleToLongBits(getY());
         result = 31 * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(getZ());
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + getFlag();
         return result;
     }
 
