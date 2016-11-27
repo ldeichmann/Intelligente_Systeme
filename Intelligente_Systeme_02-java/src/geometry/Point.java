@@ -1,7 +1,6 @@
 package geometry;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Class which represents a point in a three-dimensional space.
@@ -202,6 +201,38 @@ public class Point {
             }
         }
 
+        return returnList;
+    }
+
+    /**
+     * Calculates the average z-values for the x-axis
+     * @param pointList a list containing all points
+     * @return a list containing the average z-values for the x-axis
+     */
+    public static List<Double> calcAverageOnXAxis(List<Point> pointList) {
+        Map<Double, List<Double>> dummyMap = new HashMap<>();
+        List<Double> dummyList;
+        for (Point point : pointList) {
+            if (dummyMap.keySet().contains(point.getX())) {
+                dummyList = dummyMap.get(point.getX());
+                dummyList.set(0, dummyList.get(0) + 1);
+                dummyList.set(1, dummyList.get(1) + point.getZ());
+            } else {
+                dummyList = new ArrayList<>();
+                dummyList.add((double) 1);
+                dummyList.add(point.getZ());
+                dummyMap.put(point.getX(), dummyList);
+            }
+        }
+        dummyList = new ArrayList<>();
+        for (double x : dummyMap.keySet()) {
+            dummyList.add(x);
+        }
+        Collections.sort(dummyList);
+        List<Double> returnList = new ArrayList<>();
+        for (double iter : dummyList) {
+            returnList.add(dummyMap.get(iter).get(1) / dummyMap.get(iter).get(0));
+        }
         return returnList;
     }
 
