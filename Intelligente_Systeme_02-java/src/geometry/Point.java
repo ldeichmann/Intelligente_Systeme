@@ -195,6 +195,9 @@ public class Point {
             List<Point> clusterList = new ArrayList<>();
             clusterList.add(newTaggedPoints.get(0));
             newTaggedPoints.get(0).getClusterRecurr(newTaggedPoints, clusterList);
+            for (Point point : clusterList) {
+                point.setZ(taggedPoints.get(taggedPoints.indexOf(point)).getZ());
+            }
             returnList.add(clusterList);
             for (Point point : clusterList) {
                 newTaggedPoints.remove(point);
