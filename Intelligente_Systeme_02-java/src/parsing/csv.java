@@ -40,6 +40,32 @@ public class csv {
     }
 
     /**
+     * Reads labels from a csv file and returns a list containing the points
+     * @param file  the csv to read the points from
+     * @param points the points for which the labels are
+     * @return  a list containing the points
+     */
+    public static List<Point> getLabelsFromCSV(File file, List<Point> points) {
+        List<Point> returnList = new ArrayList<>();
+
+        CsvParserSettings settings = new CsvParserSettings();
+        settings.getFormat().setLineSeparator("\n");
+        settings.setMaxColumns(10000);
+        CsvParser parser = new CsvParser(settings);
+
+        List<String[]> allRows = parser.parseAll(file);
+
+        for (int i = 0; i < allRows.size(); i++) {
+            Point dummyPoint = new Point(Double.parseDouble(allRows.get(i)[0]), Double.parseDouble(allRows.get(i)[1]), 0.0);
+            int index = points.indexOf(dummyPoint);
+            dummyPoint.setZ(points.get(index).getZ());
+            returnList.add(dummyPoint);
+        }
+
+        return returnList;
+    }
+
+    /**
      * Writes given points to a csv
      * @param file  the file to write the points to
      * @param pointList the list containing the points
