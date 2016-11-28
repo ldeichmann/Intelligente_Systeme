@@ -8,16 +8,21 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class for evaluating detected labels
+ */
 public class Score {
 
     private double precision;
     private double recall;
-    private double fscore;
+    private double f_score;
+
+    private double correctLabels;
 
     private List<Point> points;
     private List<Point> labels;
     private List<Point> foundLabels;
-    private List<Point> labelCluster;
+    private List<List<Point>> labelCluster;
 
     /**
      * Creates a Score instance
@@ -56,40 +61,42 @@ public class Score {
      * Finds all acceptable points for all labels
      */
     private void spanClusterForLabels() {
-        List<Point> returnList = new ArrayList<>();
+        List<List<Point>> returnList = new ArrayList<>();
         for (int i = 0; i < this.labels.size(); i++) {
-            returnList.addAll(spanClusterForLabel(this.labels.get(i)));
+            returnList.add(spanClusterForLabel(this.labels.get(i)));
             System.out.println("Label " + (i+1) + "/" + this.labels.size());
         }
         this.labelCluster = returnList;
     }
 
     /**
+     * Calculates number of correct labels without duplicates
+     */
+    private void calculateCorrectLabels() {
+        List<List<Point>> dummyList = new ArrayList<>(this.labelCluster);
+        for (Point p : this.foundLabels) {
+            for (List<Point> cluster: this.labelCluster) {
+                if (cluster.contains(p) && dummyList.contains(cluster)) {
+                    correctLabels++;
+                    dummyList.remove(cluster);
+                    continue;
+                }
+            }
+        }
+    }
+
+    /**
      * Calculates precision from label clusters and found labels
      */
     private void calculatePrecision() {
-        double correctLabels = 0.0;
-        for (Point p : this.foundLabels) {
-            if (this.labelCluster.contains(p)) {
-                correctLabels++;
-                continue;
-            }
-        }
-        this.precision = correctLabels / (double)this.foundLabels.size();
+        this.precision = this.correctLabels / (double)this.foundLabels.size();
     }
 
     /**
      * Calculates recall from label clusters and found labels
      */
     private void calculateRecall() {
-        double correctLabels = 0.0;
-        for (Point p : this.foundLabels) {
-            if (this.labelCluster.contains(p)) {
-                correctLabels++;
-                continue;
-            }
-        }
-        this.recall = correctLabels / (double)this.labels.size();
+        this.recall = this.correctLabels / (double)this.labels.size();
     }
 
     /**
@@ -98,23 +105,24 @@ public class Score {
      */
     public double calculateScore() {
         this.spanClusterForLabels();
+        this.calculateCorrectLabels();
         this.calculatePrecision();
         this.calculateRecall();
-        this.fscore = (2.0 * this.recall * this.precision)/(this.recall + this.precision);
-        return this.fscore;
+        this.f_score = (2.0 * this.recall * this.precision)/(this.recall + this.precision);
+        return this.f_score;
     }
 
-//    public static void main(String[] args) throws FileNotFoundException {
-//        List<Point> pointList = csv.getPointsFromCSV(new File("/home/cru/Downloads/ISys_02/data0.csv"));
-//        List<Point> labelList = csv.getLabelsFromCSV(new File("/home/cru/Downloads/ISys_02/label0.csv"), pointList);
-//        List<Point> calcLabel = csv.getLabelsFromCSV(new File("/home/cru/Downloads/ISys_02/rommel.csv"), pointList);
-//
-//        Score s = new Score(pointList, labelList, calcLabel);
-//
-//        s.calculateScore();
-//        System.out.println("Recall: " + s.recall);
-//        System.out.println("Precision: " + s.precision);
-//        System.out.println("F-Score: " + s.fscore);
+    public static void main(String[] args) throws FileNotFoundException {
+        List<Point> pointList = csv.getPointsFromCSV(new File("/home/cru/Downloads/ISys_02/data0.csv"));
+        List<Point> labelList = csv.getLabelsFromCSV(new File("/home/cru/Downloads/ISys_02/label0.csv"), pointList);
+        List<Point> calcLabel = csv.getLabelsFromCSV(new File("/home/cru/Downloads/ISys_02/rommel.csv"), pointList);
+
+        Score s = new Score(pointList, labelList, calcLabel);
+
+        s.calculateScore();
+        System.out.println("Recall: " + s.recall);
+        System.out.println("Precision: " + s.precision);
+        System.out.println("F-Score: " + s.f_score);
 //        csv.writePointstoCSV(new File("/home/cru/Downloads/ISys_02/clustertest.csv"), s.labelCluster, false);
-//    }
+    }
 }
