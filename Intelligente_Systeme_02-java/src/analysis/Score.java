@@ -24,6 +24,18 @@ public class Score {
     private List<Point> foundLabels;
     private List<List<Point>> labelCluster;
 
+    public double getPrecision() {
+        return precision;
+    }
+
+    public double getRecall() {
+        return recall;
+    }
+
+    public double getF_score() {
+        return f_score;
+    }
+
     /**
      * Creates a Score instance
      * @param points List of all points
@@ -35,6 +47,7 @@ public class Score {
         this.labels = labels;
         this.foundLabels = foundLabels;
     }
+
 
     /**
      * Finds acceptable points around a given label
