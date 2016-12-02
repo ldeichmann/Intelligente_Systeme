@@ -19,23 +19,29 @@ public class Test {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        List<Point> pointList = csv.getPointsFromCSV(new File("/home/cru/Downloads/ISys_02/data1.csv"));
-        List<Point> labelList = csv.getLabelsFromCSV(new File("/home/cru/Downloads/ISys_02/label1.csv"), pointList);
+        Point[][] pointList = csv.getPointsFromCSV(new File("data0.csv"));
+        List<Point> labelList = csv.getLabelsFromCSV(new File("label0.csv"), pointList);
         List<Double> bodenList = Point.calcAverageOnXAxis(pointList);
-        List<Point> taggedPoints = new ArrayList<>();
-        for (Point point : pointList) {
-            if (point.getZ() > bodenList.get((int) point.getX()) + bodenList.get((int) point.getX()) * 0.04) {
-                taggedPoints.add(point);
+
+        for (int x = 0; x < pointList.length; x++) {
+            for (int y = 0; y < pointList[0].length; y++) {
+                if (pointList[x][y].getZ() > bodenList.get((int) pointList[x][y].getX()) + bodenList.get((int) pointList[x][y].getX()) * 0.037) {
+                    pointList[x][y].setFlag(1);
+                }
             }
         }
+
+        System.out.println("Read points");
 
         List<List<Point>> clusterList;
         Point biggestPoint = null;
         List<Point> dummyList = new ArrayList<>();
-        clusterList = Point.getAllCluster(taggedPoints);
+        clusterList = Point.getAllCluster(pointList);
+        int numSmallClusters = 0;
         for (List<Point> cluster : clusterList) {
 
             if (cluster.size() < 20) {
+                numSmallClusters++;
                 continue;
             }
 
@@ -51,25 +57,8 @@ public class Test {
             dummyList.add(biggestPoint);
         }
 
-        // this data cleanup has the following effect using 0.04, 20, max_dist = 50, max_diff = 0.5;
-        // old:
-        //  data0:
-        //   Recall: 0.8489208633093526
-        //   Precision: 0.7515923566878981
-        //   F-Score: 0.7972972972972974
-        //  data1:
-        //   Recall: 0.8672566371681416
-        //   Precision: 0.875
-        //   F-Score: 0.8711111111111112
-        // new:
-        //  data0:
-        //   Recall: 0.8489208633093526
-        //   Precision: 0.7972972972972973
-        //   F-Score: 0.8222996515679443
-        //  data1:
-        //  Recall: 0.8672566371681416
-        //  Precision: 0.9423076923076923
-        //  F-Score: 0.9032258064516129
+        System.out.println("Got all Clusters");
+        System.out.println("Got " + numSmallClusters + " too small clusters");
 
         double max_dist = 50.0;
         double max_diff = 0.5;
@@ -88,22 +77,14 @@ public class Test {
 
                     if (height_a < height_b) {
                         if ((height_b * max_diff) > height_a) {
-//                            System.out.println((height_b * max_diff) + " > " + height_a);
-//                            System.out.println("Removing point at x: " + a.getX() + " y: " + a.getY());
                             removeList.add(a);
-//                            break;
                         }
                     } else if (height_b < height_a) {
                         if ((height_a * max_diff) > height_b) {
-//                            System.out.println((height_a * max_diff) + " > " + height_b);
-//                            System.out.println("Removing point at x: " + b.getX() + " y: " + b.getY());
                             removeList.add(b);
-//                            break;
                         }
                     }
                     // else don't care...
-
-
                 }
             }
         }
@@ -118,6 +99,6 @@ public class Test {
         System.out.println("Precision: " + s.getPrecision());
         System.out.println("F-Score: " + s.getF_score());
 
-        csv.writePointstoCSV(new File("/home/cru/Downloads/ISys_02/rommel.csv"), dummyList, false);
+        csv.writePointstoCSV(new File("rommel.csv"), dummyList, false);
     }
 }

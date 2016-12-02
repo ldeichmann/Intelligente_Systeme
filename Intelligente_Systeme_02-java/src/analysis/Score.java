@@ -1,10 +1,7 @@
 package analysis;
 
 import geometry.Point;
-import parsing.csv;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,15 +10,44 @@ import java.util.List;
  */
 public class Score {
 
+    /**
+     * Precision of found labels
+     */
     private double precision;
+
+    /**
+     * Recall of found labels
+     */
     private double recall;
+
+    /**
+     * F-Score of found labels
+     */
     private double f_score;
 
+    /**
+     * Number of correct labels
+     */
     private double correctLabels;
 
-    private List<Point> points;
+    /**
+     * 2D Array of all points
+     */
+    private Point[][] points;
+
+    /**
+     * List of expected labels
+     */
     private List<Point> labels;
+
+    /**
+     * List of found labels
+     */
     private List<Point> foundLabels;
+
+    /**
+     * List of List of acceptable Points around a label
+     */
     private List<List<Point>> labelCluster;
 
     public double getPrecision() {
@@ -38,11 +64,11 @@ public class Score {
 
     /**
      * Creates a Score instance
-     * @param points List of all points
+     * @param points 2D array of all points
      * @param labels List of labels within points
      * @param foundLabels List of labels to be evaluated
      */
-    public Score(List<Point> points, List<Point> labels, List<Point> foundLabels) {
+    public Score(Point[][] points, List<Point> labels, List<Point> foundLabels) {
         this.points = points;
         this.labels = labels;
         this.foundLabels = foundLabels;
@@ -52,7 +78,7 @@ public class Score {
     /**
      * Finds acceptable points around a given label
      * @param label the label from which to span the cluster
-     * @return  a list containing the points
+     * @return a list containing the points
      */
     private List<Point> spanClusterForLabel(Point label) {
         List<Point> returnList = new ArrayList<>();
@@ -60,11 +86,10 @@ public class Score {
 
         returnList.add(label);
         for (int i = 1; i <= 5; i++) {
-            neighbours.addAll(label.getNearPoints(i));
+            neighbours.addAll(label.getNearPoints(points, i));
         }
         for (Point x : neighbours){
-            int index = this.points.indexOf(x);
-            if (index >= 0 && !returnList.contains(x) && this.points.get(index).getZ() >= label.getZ())
+            if (!returnList.contains(x) && x.getZ() >= label.getZ())
                 returnList.add(x);
         }
         return returnList;
@@ -77,7 +102,6 @@ public class Score {
         List<List<Point>> returnList = new ArrayList<>();
         for (int i = 0; i < this.labels.size(); i++) {
             returnList.add(spanClusterForLabel(this.labels.get(i)));
-            System.out.println("Label " + (i+1) + "/" + this.labels.size());
         }
         this.labelCluster = returnList;
     }
@@ -123,19 +147,5 @@ public class Score {
         this.calculateRecall();
         this.f_score = (2.0 * this.recall * this.precision)/(this.recall + this.precision);
         return this.f_score;
-    }
-
-    public static void main(String[] args) throws FileNotFoundException {
-        List<Point> pointList = csv.getPointsFromCSV(new File("/home/cru/Downloads/ISys_02/data0.csv"));
-        List<Point> labelList = csv.getLabelsFromCSV(new File("/home/cru/Downloads/ISys_02/label0.csv"), pointList);
-        List<Point> calcLabel = csv.getLabelsFromCSV(new File("/home/cru/Downloads/ISys_02/rommel.csv"), pointList);
-
-        Score s = new Score(pointList, labelList, calcLabel);
-
-        s.calculateScore();
-        System.out.println("Recall: " + s.recall);
-        System.out.println("Precision: " + s.precision);
-        System.out.println("F-Score: " + s.f_score);
-//        csv.writePointstoCSV(new File("/home/cru/Downloads/ISys_02/clustertest.csv"), s.labelCluster, false);
     }
 }
