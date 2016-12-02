@@ -19,13 +19,19 @@ public class Test {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
+
+        int clust_size = 15;
+        double clust_height = 0.038;
+        double max_diff = 0.53;
+        double max_dist = 37;
+
         Point[][] pointList = csv.getPointsFromCSV(new File("data0.csv"));
         List<Point> labelList = csv.getLabelsFromCSV(new File("label0.csv"), pointList);
         List<Double> bodenList = Point.calcAverageOnXAxis(pointList);
 
         for (int x = 0; x < pointList.length; x++) {
             for (int y = 0; y < pointList[0].length; y++) {
-                if (pointList[x][y].getZ() > bodenList.get((int) pointList[x][y].getX()) + bodenList.get((int) pointList[x][y].getX()) * 0.037) {
+                if (pointList[x][y].getZ() > bodenList.get((int) pointList[x][y].getX()) + bodenList.get((int) pointList[x][y].getX()) * clust_height) {
                     pointList[x][y].setFlag(1);
                 }
             }
@@ -40,7 +46,7 @@ public class Test {
         int numSmallClusters = 0;
         for (List<Point> cluster : clusterList) {
 
-            if (cluster.size() < 20) {
+            if (cluster.size() < clust_size) {
                 numSmallClusters++;
                 continue;
             }
@@ -59,9 +65,6 @@ public class Test {
 
         System.out.println("Got all Clusters");
         System.out.println("Got " + numSmallClusters + " too small clusters");
-
-        double max_dist = 50.0;
-        double max_diff = 0.5;
 
         List<Point> removeList = new ArrayList<>();
         // look at neighbours heights
