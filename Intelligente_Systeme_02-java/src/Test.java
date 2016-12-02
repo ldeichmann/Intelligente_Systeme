@@ -11,7 +11,7 @@ public class Test {
 
     public static double distance(Point a, Point b) {
 
-        return Math.abs(a.getX() - b.getX());
+        return Math.abs(a.getX() - b.getX()); // Using taxicab geometry for the best performance
 //        double x = a.getX() - b.getX();
 //        double y = a.getY() - b.getY();
 //
