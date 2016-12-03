@@ -1,8 +1,8 @@
 library(plotly)
 
-m <- data.matrix(read.csv("C:/Users/Adrian/Downloads/data0.csv", header = FALSE, sep = ","))
+m <- data.matrix(read.csv("/home/cru/Code/Intelligente_Systeme/Intelligente_Systeme_02-java/data1.csv", header = FALSE, sep = ","))
 
-ml <- data.matrix(read.csv("C:/Users/Adrian/Downloads/label0.csv", header = FALSE, sep = ","))
+ml <- data.matrix(read.csv("/home/cru/Code/Intelligente_Systeme/Intelligente_Systeme_02-java/rommel.csv", header = FALSE, sep = ","))
 
 x <- seq_len(ncol(m))
 y <- seq_len(nrow(m))
@@ -17,6 +17,7 @@ for(i in 1:len)
 }
 
 
-plot_ly() %>% add_surface(x = ~x, y = ~y, z = ~m) %>% 
+p <- plot_ly() %>% add_surface(x = ~x, y = ~y, z = ~m) %>% 
   add_trace(x = ~x1, y = ~y1, z = ~z, mode = "markers", type = "scatter3d", 
             marker = list(size = 5, color = "red", symbol = 104))
+htmlwidgets::saveWidget(p, "/home/cru/Documents/test1.html")
