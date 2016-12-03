@@ -12,60 +12,16 @@ public class Test {
     public static double distance(Point a, Point b) {
 
         return Math.abs(a.getX() - b.getX()); // Using taxicab geometry for the best performance
-//        double x = a.getX() - b.getX();
-//        double y = a.getY() - b.getY();
-//
-//        return Math.sqrt((Math.pow(x, 2) + Math.pow(y, 2)));
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static double pythagoreanDistance(Point a, Point b) {
+        double x = a.getX() - b.getX();
+        double y = a.getY() - b.getY();
 
-        int clust_size = 15;
-        double clust_height = 0.038;
-        double max_diff = 0.53;
-        double max_dist = 37;
+        return Math.sqrt((Math.pow(x, 2) + Math.pow(y, 2)));
+    }
 
-        Point[][] pointList = csv.getPointsFromCSV(new File("data0.csv"));
-        List<Point> labelList = csv.getLabelsFromCSV(new File("label0.csv"), pointList);
-        List<Double> bodenList = Point.calcAverageOnXAxis(pointList);
-
-        for (int x = 0; x < pointList.length; x++) {
-            for (int y = 0; y < pointList[0].length; y++) {
-                if (pointList[x][y].getZ() > bodenList.get((int) pointList[x][y].getX()) + bodenList.get((int) pointList[x][y].getX()) * clust_height) {
-                    pointList[x][y].setFlag(1);
-                }
-            }
-        }
-
-        System.out.println("Read points");
-
-        List<List<Point>> clusterList;
-        Point biggestPoint = null;
-        List<Point> dummyList = new ArrayList<>();
-        clusterList = Point.getAllCluster(pointList);
-        int numSmallClusters = 0;
-        for (List<Point> cluster : clusterList) {
-
-            if (cluster.size() < clust_size) {
-                numSmallClusters++;
-                continue;
-            }
-
-            for (int i = 0; i < cluster.size(); i++) {
-                if (i == 0) {
-                    biggestPoint = cluster.get(i);
-                } else {
-                    if (biggestPoint.getZ() < cluster.get(i).getZ()) {
-                        biggestPoint = cluster.get(i);
-                    }
-                }
-            }
-            dummyList.add(biggestPoint);
-        }
-
-        System.out.println("Got all Clusters");
-        System.out.println("Got " + numSmallClusters + " too small clusters");
-
+    public static List<Point> cleanData(List<Double> bodenList, List<Point> dummyList, double max_diff, double max_dist) {
         List<Point> removeList = new ArrayList<>();
         // look at neighbours heights
         for (int i = 0; i < dummyList.size(); i++) {
@@ -92,8 +48,87 @@ public class Test {
             }
         }
         System.out.println("Filtering " + removeList.size() + " items from labels");
+        return removeList;
+    }
 
-        dummyList.removeAll(removeList);
+    public static List<Point> getClusterMaximums(List<Point> cluster, int size, int distance) {
+        List<Point> max = new ArrayList<>();
+
+        Point max1 = null;
+        Point max2 = null;
+
+        for (int i = 0; i < cluster.size(); i++) {
+            if (i == 0) {
+                max1 = cluster.get(i);
+            } else {
+                if (max1.getZ() < cluster.get(i).getZ()) {
+                    max1= cluster.get(i);
+                }
+            }
+        }
+        max.add(max1);
+
+        if (cluster.size() > size) {
+            for (int i = 0; i < cluster.size(); i++) {
+                if (pythagoreanDistance(cluster.get(i), max1) > distance) {
+                    if (max2 == null) {
+                        max2 = cluster.get(i);
+                    } else {
+                        if (max2.getZ() < cluster.get(i).getZ()) {
+                            max2 = cluster.get(i);
+                        }
+                    }
+                }
+            }
+            if (max2 != null) {
+                max.add(max2);
+            }
+        }
+        return max;
+    }
+
+    public static void main(String[] args) throws FileNotFoundException {
+
+        int cluster_size = 36;
+        double cluster_height = 0.035;
+        double max_diff = 0.53;
+        double max_dist = 37;
+        int cluster_double_size = 4500;
+        int cluster_dist = 70;
+
+        Point[][] pointList = csv.getPointsFromCSV(new File("data0.csv"));
+        List<Point> labelList = csv.getLabelsFromCSV(new File("label0.csv"), pointList);
+        List<Double> bodenList = Point.calcAverageOnXAxis(pointList);
+
+        for (int x = 0; x < pointList.length; x++) {
+            for (int y = 0; y < pointList[0].length; y++) {
+                if (pointList[x][y].getZ() > bodenList.get((int) pointList[x][y].getX()) + bodenList.get((int) pointList[x][y].getX()) * cluster_height) {
+                    pointList[x][y].setFlag(1);
+                }
+            }
+        }
+
+        System.out.println("Read points");
+
+        List<List<Point>> clusterList;
+        Point biggestPoint = null;
+        List<Point> dummyList = new ArrayList<>();
+        clusterList = Point.getAllCluster(pointList);
+        int numSmallClusters = 0;
+        for (List<Point> cluster : clusterList) {
+
+            if (cluster.size() < cluster_size) {
+                numSmallClusters++;
+                continue;
+            }
+
+            dummyList.addAll(getClusterMaximums(cluster, cluster_double_size, cluster_dist));
+        }
+
+        System.out.println("Got all Clusters");
+        System.out.println("Got " + numSmallClusters + " too small clusters");
+
+        dummyList.removeAll(cleanData(bodenList, dummyList, max_diff, max_dist));
 
         Score s = new Score(pointList, labelList, dummyList);
 
