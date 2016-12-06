@@ -33,7 +33,7 @@ public class Point {
     private static double bound_y;
 
     /**
-     * extra flag for the point.
+     * Extra flag for the point.
      * 0 means not tagged, 1 tagged and all integers > 1 define the membership of a specific cluster.
      */
     private int flag;
@@ -108,6 +108,8 @@ public class Point {
 
         Point point = (Point) o;
 
+        // x and y values are enough for us here, if in doubt
+        // we'll get them from the points array
         if (Double.compare(point.getX(), getX()) != 0) return false;
         return Double.compare(point.getY(), getY()) == 0;
     }
@@ -144,7 +146,7 @@ public class Point {
     }
 
     /**
-     * Checks whether given values are within bounds;
+     * Checks whether given values are within bounds
      * @param x x-axis position
      * @param y y-axis position
      * @return is position in bounds
@@ -154,7 +156,7 @@ public class Point {
     }
 
     /**
-     * Returns a list containing points which are connected to this point regarding to x- and y-coordinates
+     * Returns a list containing all points which are neighbours of this point
      * @param points a 2D array containing all points
      * @param step  the layer of the connected points
      * @return  the list containing the points which are connected to this point
