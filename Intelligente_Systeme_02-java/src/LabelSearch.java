@@ -42,7 +42,7 @@ public class LabelSearch {
      * @param max_list list of all maximums
      * @param max_diff max height difference between two points
      * @param max_dist distance for which to compare two points
-     * @return
+     * @return Cleaned list of maximums
      */
     public static List<Point> cleanData(List<Double> floorList, List<Point> max_list, double max_diff, double max_dist) {
         List<Point> removeList = new ArrayList<>();
