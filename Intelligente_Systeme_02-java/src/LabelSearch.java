@@ -81,7 +81,7 @@ public class LabelSearch {
      * @param distance minimal distance between two maximums
      * @return List of Maximums
      */
-    public static List<Point> getClusterMaximums(List<Point> cluster, int size, int distance) {
+    public static List<Point> getClusterMaximums(Point[][] points, List<Point> cluster, int size, int distance) {
         List<Point> max = new ArrayList<>();
 
         Point max1 = null;
@@ -111,6 +111,12 @@ public class LabelSearch {
                 }
             }
             if (max2 != null) {
+                // if this isn't a local maximum, throw it out
+                for (Point p: max2.getNearPoints(points, 1)) {
+                    if (p.getZ() > max2.getZ()) {
+                        return max;
+                    }
+                }
                 max.add(max2);
             }
         }
@@ -135,15 +141,15 @@ public class LabelSearch {
     
     public static void main(String[] args) throws FileNotFoundException {
 
-        int cluster_size = 36;
-        double cluster_height = 0.035;
-        double max_diff = 0.53;
-        double max_dist = 37;
-        int cluster_double_size = 4500;
-        int cluster_dist = 70;
+        int cluster_size = 59;
+        double cluster_height = 0.031;
+        double max_diff = 0.4;
+        double max_dist = 99;
+        int cluster_double_size = 700;
+        int cluster_dist = 45;
 
-        Point[][] points = csv.getPointsFromCSV(new File("data2.csv"));
-        List<Point> labelList = csv.getLabelsFromCSV(new File("label2.csv"), points);
+        Point[][] points = csv.getPointsFromCSV(new File("data0.csv"));
+        List<Point> labelList = csv.getLabelsFromCSV(new File("label0.csv"), points);
         List<Double> floorList = Point.calcAverageOnXAxis(points);
         System.out.println("Read points");
 
@@ -163,7 +169,7 @@ public class LabelSearch {
                 continue;
             }
 
-            dummyList.addAll(getClusterMaximums(cluster, cluster_double_size, cluster_dist));
+            dummyList.addAll(getClusterMaximums(points, cluster, cluster_double_size, cluster_dist));
         }
 
         System.out.println("Got all Clusters");
