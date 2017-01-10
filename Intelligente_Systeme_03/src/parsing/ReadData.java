@@ -10,8 +10,8 @@ import java.util.List;
 
 public class ReadData {
 
-    public static List<Vector> getVectorsFromFile(File file) {
-        List<Vector> vecs = new ArrayList<>();
+    public static List<List<Vector>> getVectorsFromFile(File file) {
+        List<List<Vector>> vec_list = new ArrayList<>();
 
         CsvParserSettings settings = new CsvParserSettings();
         settings.getFormat().setLineSeparator("\n");
@@ -24,14 +24,16 @@ public class ReadData {
 
         // go through each element in each row
         for (String[] row: allRows) {
+            List<Vector> vecs = new ArrayList<>();
             double[] prev = getCoordinatesFromString(row[0]);
             for (int i = 1; i < row.length; i++) {
                 double[] curr = getCoordinatesFromString(row[i]);
                 vecs.add(new Vector(curr[0]-prev[0], curr[1]-prev[1]));
             }
+            vec_list.add(vecs);
         }
 
-        return vecs;
+        return vec_list;
     }
 
 

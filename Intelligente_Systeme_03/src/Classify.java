@@ -79,21 +79,62 @@ public class Classify {
 
     public static void main(String[] args) {
 
-        double threshold = 3;
+        double threshold = 90;
 
-        List<Vector> vecs = ReadData.getVectorsFromFile(new File("train_alone.txt"));
-        List<DifferenceVector> diff_vecs = new ArrayList<>();
+        List<List<Vector>> vecs_alone = ReadData.getVectorsFromFile(new File("train_alone.txt"));
+        List<List<Vector>> vecs_group = ReadData.getVectorsFromFile(new File("train_group.txt"));
+        List<DifferenceVector> diff_vecs_alone = new ArrayList<>();
+        List<DifferenceVector> diff_vecs_group = new ArrayList<>();
 
-        for (int i = 1; i < vecs.size(); i++) {
-            diff_vecs.add(new DifferenceVector(vecs.get(i-1), vecs.get(i)) );
+        for (List<Vector> v : vecs_alone) {
+            for (int i = 1; i < v.size(); i++) {
+                diff_vecs_alone.add(new DifferenceVector(v.get(i-1), v.get(i)) );
+            }
+        }
+        for (List<Vector> v : vecs_group) {
+            for (int i = 1; i < v.size(); i++) {
+                diff_vecs_group.add(new DifferenceVector(v.get(i-1), v.get(i)) );
+            }
         }
 
-        classifyDifferenceVectors(diff_vecs, threshold);
+        classifyDifferenceVectors(diff_vecs_alone, threshold);
+        classifyDifferenceVectors(diff_vecs_group, threshold);
 
-        Map<State, Double> counted = countClassifications(diff_vecs);
+        Map<State, Double> counted_alone = countClassifications(diff_vecs_alone);
+        Map<State, Double> counted_group = countClassifications(diff_vecs_group);
 
-        System.out.println(counted);
+        List<List<Vector>> eval_vecs = ReadData.getVectorsFromFile(new File("eval_alone.txt"));
 
+        int count_alone = 0;
+        int count_group = 0;
+
+        for (List<Vector> eval_v : eval_vecs) {
+
+            List<DifferenceVector> eval_diff_vecs = new ArrayList<>();
+
+            for (int i = 1; i < eval_v.size(); i++) {
+                eval_diff_vecs.add(new DifferenceVector(eval_v.get(i - 1), eval_v.get(i)));
+            }
+            classifyDifferenceVectors(eval_diff_vecs, threshold);
+
+            double tmp_alone = 0;
+            double tmp_group = 0;
+
+            for (DifferenceVector eval_vec : eval_diff_vecs) {
+                tmp_alone += -Math.log(counted_alone.get(eval_vec.getState()));
+                tmp_group += -Math.log(counted_group.get(eval_vec.getState()));
+            }
+
+            if (tmp_alone <= tmp_group) {
+                count_group++;
+            } else {
+                count_alone++;
+            }
+
+//            System.out.println(tmp_alone + " - " + tmp_group);
+
+        }
+        System.out.println("Alone: " + count_alone + "\nGroup: " + count_group);
     }
 
 }
