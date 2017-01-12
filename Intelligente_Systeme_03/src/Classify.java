@@ -11,7 +11,8 @@ import java.util.Map;
 
 public class Classify {
 
-    public static String classifyDifferenceVector(double value, double threshold) {
+
+    public static String classifyDifferenceVector(double value, double threshold) throws Exception {
 
         if (value < (-1 * threshold)) {
             return "A";
@@ -20,69 +21,92 @@ public class Classify {
         } else if (threshold < value) {
             return "C";
         }
-        return "F";
+        throw new Exception("Cannot classify!");
     }
 
-    public static void classifyDifferenceVectors(List<DifferenceVector> vecs, double threshold) {
+    public static void classifyDifferenceVectors(List<DifferenceVector> vecs, double threshold) throws Exception {
 
         for (DifferenceVector v: vecs) {
-            String tmp = new String();
-
-            tmp = tmp.concat(classifyDifferenceVector(v.getDiff_x(), threshold));
-            tmp = tmp.concat(classifyDifferenceVector(v.getDiff_y(), threshold));
-
+            String tmp = classifyDifferenceVector(v.getDiff_x(), threshold)
+                    + classifyDifferenceVector(v.getDiff_y(), threshold);
             v.setState(State.valueOf(tmp));
         }
 
     }
 
-    public static Map<State, Double> countClassifications(List<DifferenceVector> vecs) {
+    public static Map<String, Double> countClassifications(List<DifferenceVector> vecs) {
+        Map<String, Double> pairMap = new HashMap<>();
         Map<State, Double> countMap = new HashMap<>();
 
-        double a = 0;
-        double b = 0;
-        double c = 0;
-
-        for (DifferenceVector vec : vecs) {
-            countMap.putIfAbsent(vec.getState(), 0.0);
+        // set everything to 1
+        for (State s: State.values()) {
+            for (State s2: State.values()) {
+                String pair = s.name() + s2.name();
+                pairMap.put(pair, 1.0);
+                countMap.putIfAbsent(s, 0.0);
+                countMap.put(s, countMap.get(s)+1.0);
+            }
+        }
+        for (int i = 0; i < vecs.size()-1; i++) {
+            DifferenceVector vec = vecs.get(i);
+            DifferenceVector vec2 = vecs.get(i+1);
+            String pair = vec.getState().name() + vec2.getState().name();
             countMap.put(vec.getState(), countMap.get(vec.getState())+1);
-            // This is so terrible, I can't stop laughing
-            switch (vec.getState().name().charAt(0)) {
-                case 'A':
-                    a++;
-                    break;
-                case 'B':
-                    b++;
-                    break;
-                case 'C':
-                    c++;
-                    break;
-            }
+            pairMap.put(pair, pairMap.get(pair)+1);
         }
 
-        for (State s : State.values()) {
-            switch (s.name().charAt(0)) {
-                case 'A':
-                    countMap.put(s, countMap.get(s)/a);
-                    break;
-                case 'B':
-                    countMap.put(s, countMap.get(s)/b);
-                    break;
-                case 'C':
-                    countMap.put(s, countMap.get(s)/c);
-                    break;
-            }
-        }
+        pairMap.forEach( (k,v) -> pairMap.put(k, v / countMap.get( State.valueOf(k.substring(0, 2)) )) );
 
-        return countMap;
+        return pairMap;
     }
 
-    public static void main(String[] args) {
+    public static Double classify_relation(double threshold,Map<String, Double> counted_alone ,Map<String, Double> counted_group, boolean alone)throws Exception{
+        List<List<Vector>> eval_vecs;
+        if(alone) {
+            eval_vecs = ReadData.getVectorsFromFile(new File("eval_alone.txt"));
+        }else{
+            eval_vecs = ReadData.getVectorsFromFile(new File("eval_group.txt"));
+        }
+        double count_alone = 0;
+        double count_group = 0;
 
-        double threshold = 90;
+        for (List<Vector> eval_v : eval_vecs) {
 
-        List<List<Vector>> vecs_alone = ReadData.getVectorsFromFile(new File("train_alone.txt"));
-        List<List<Vector>> vecs_group = ReadData.getVectorsFromFile(new File("train_group.txt"));
+            List<DifferenceVector> eval_diff_vecs = new ArrayList<>();
+
+            for (int i = 1; i < eval_v.size(); i++) {
+                eval_diff_vecs.add(new DifferenceVector(eval_v.get(i - 1), eval_v.get(i)));
+            }
+            classifyDifferenceVectors(eval_diff_vecs, threshold);
+
+            double tmp_alone = 0;
+            double tmp_group = 0;
+
+            for (int i = 0; i < eval_diff_vecs.size()-1; i++) {
+                DifferenceVector eval_vec = eval_diff_vecs.get(i);
+                DifferenceVector eval_vec2 = eval_diff_vecs.get(i+1);
+                String state = eval_vec.getState().name() + eval_vec2.getState().name();
+                tmp_alone += -Math.log(counted_alone.get(state));
+                tmp_group += -Math.log(counted_group.get(state));
+            }
+
+            if (tmp_alone >= tmp_group) {
+                count_group++;
+            } else {
+                count_alone++;
+            }
+
+        }
+        //System.out.println("Alone: " + count_alone + "\nGroup: " + count_group +  "\nEvalVecSize: " + eval_vecs.size() + "\n" + alone);
+        if(alone) {
+            return (double) count_alone/ (double) eval_vecs.size();
+        } else {
+            return (double) count_group/ (double) eval_vecs.size();
+        }
+    }
+
+
+    public static double relation (double threshold, List<List<Vector>> vecs_alone, List<List<Vector>> vecs_group)throws Exception{
         List<DifferenceVector> diff_vecs_alone = new ArrayList<>();
         List<DifferenceVector> diff_vecs_group = new ArrayList<>();
 
@@ -100,42 +124,22 @@ public class Classify {
         classifyDifferenceVectors(diff_vecs_alone, threshold);
         classifyDifferenceVectors(diff_vecs_group, threshold);
 
-        Map<State, Double> counted_alone = countClassifications(diff_vecs_alone);
-        Map<State, Double> counted_group = countClassifications(diff_vecs_group);
+        Map<String, Double> counted_alone = countClassifications(diff_vecs_alone);
+        Map<String, Double> counted_group = countClassifications(diff_vecs_group);
 
-        List<List<Vector>> eval_vecs = ReadData.getVectorsFromFile(new File("eval_alone.txt"));
-
-        int count_alone = 0;
-        int count_group = 0;
-
-        for (List<Vector> eval_v : eval_vecs) {
-
-            List<DifferenceVector> eval_diff_vecs = new ArrayList<>();
-
-            for (int i = 1; i < eval_v.size(); i++) {
-                eval_diff_vecs.add(new DifferenceVector(eval_v.get(i - 1), eval_v.get(i)));
-            }
-            classifyDifferenceVectors(eval_diff_vecs, threshold);
-
-            double tmp_alone = 0;
-            double tmp_group = 0;
-
-            //Probably the mistake : -Math.log is greater, the lesser the ingoing number is
-            for (DifferenceVector eval_vec : eval_diff_vecs) {
-                tmp_alone += -Math.log(counted_alone.get(eval_vec.getState()));
-                tmp_group += -Math.log(counted_group.get(eval_vec.getState()));
-            }
-
-            if (tmp_alone <= tmp_group) {
-                count_group++;
-            } else {
-                count_alone++;
-            }
-
-//            System.out.println(tmp_alone + " - " + tmp_group);
-
-        }
-        System.out.println("Alone: " + count_alone + "\nGroup: " + count_group);
+        double relation = ((classify_relation(threshold,counted_alone,counted_group,true) + classify_relation(threshold,counted_alone,counted_group,false))/2);
+       return relation;
+        //return "Relation: " + relation + ", Threshhold: " + threshold;
     }
 
+    public static void main(String[] args) throws Exception{
+
+        double threshold = 1;
+
+        List<List<Vector>> vecs_alone = ReadData.getVectorsFromFile(new File("train_alone.txt"));
+        List<List<Vector>> vecs_group = ReadData.getVectorsFromFile(new File("train_group.txt"));
+        for (threshold = 1; threshold < 92; threshold++){
+            System.out.println(relation(threshold,vecs_alone,vecs_group));
+        }
+    }
 }
