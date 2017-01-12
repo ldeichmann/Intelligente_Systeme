@@ -120,6 +120,7 @@ public class Classify {
             double tmp_alone = 0;
             double tmp_group = 0;
 
+            //Probably the mistake : -Math.log is greater, the lesser the ingoing number is
             for (DifferenceVector eval_vec : eval_diff_vecs) {
                 tmp_alone += -Math.log(counted_alone.get(eval_vec.getState()));
                 tmp_group += -Math.log(counted_group.get(eval_vec.getState()));
