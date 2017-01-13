@@ -9,8 +9,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Classification using a bayes classification with a markov chain
+ */
 public class Classify {
 
+    /**
+     * Return a classification for a given value
+     * @param value to be classified
+     * @param threshold for classification
+     * @return String containing classification, either "A", "B" or "C"
+     * @throws Exception if value cannot be classified
+     */
     public static String classifyDifferenceVector(double value, double threshold) throws Exception {
 
         if (value < (-1 * threshold)) {
@@ -23,6 +33,12 @@ public class Classify {
         throw new Exception("Cannot classify!");
     }
 
+    /**
+     * Classifies List of {@link DifferenceVector} using a threshold
+     * @param vecs List of {@link DifferenceVector} to be classified
+     * @param threshold for classification
+     * @throws Exception if classification fails for a vector
+     */
     public static void classifyDifferenceVectors(List<DifferenceVector> vecs, double threshold) throws Exception {
 
         for (DifferenceVector v: vecs) {
@@ -33,6 +49,11 @@ public class Classify {
 
     }
 
+    /**
+     * Generates probability matrix in a map for a given List of {@link DifferenceVector}
+     * @param vecs
+     * @return
+     */
     public static Map<String, Double> countClassifications(List<DifferenceVector> vecs) {
         Map<String, Double> pairMap = new HashMap<>();
         Map<State, Double> countMap = new HashMap<>();
@@ -59,6 +80,10 @@ public class Classify {
         return pairMap;
     }
 
+    /**
+     * Pretty prints a probability map like a matrix
+     * @param matrix Map containing data
+     */
     public static void printMatrix(Map<String, Double> matrix) {
 
         System.out.print("     ");

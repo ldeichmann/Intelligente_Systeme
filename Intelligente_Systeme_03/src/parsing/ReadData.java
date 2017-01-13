@@ -10,6 +10,11 @@ import java.util.List;
 
 public class ReadData {
 
+    /**
+     * Generates a List of List containing {@link Vector}s for movements
+     * @param file
+     * @return
+     */
     public static List<List<Vector>> getVectorsFromFile(File file) {
         List<List<Vector>> vec_list = new ArrayList<>();
 
@@ -36,7 +41,11 @@ public class ReadData {
         return vec_list;
     }
 
-
+    /**
+     * Gets coordinates from a String formatted like "x,xx;y,yy"
+     * @param s String of coordinates
+     * @return Array containing x and y coordinates
+     */
     private static double[] getCoordinatesFromString(String s) {
         String[] sep = s.split(",");
         double[] values = new double[2];

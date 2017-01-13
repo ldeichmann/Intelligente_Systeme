@@ -2,8 +2,15 @@ package geometry;
 
 public class DifferenceVector {
 
+    /**
+     * Classification for the DifferenceVector
+     */
     State state;
 
+    /**
+     * Vectors which were used to calculate DifferenceVector
+     * Currently not used, but kept because why not.
+     */
     Vector vec_a;
     Vector vec_b;
 
@@ -11,21 +18,21 @@ public class DifferenceVector {
         return diff_x;
     }
 
-    public void setDiff_x(double diff_x) {
-        this.diff_x = diff_x;
-    }
-
     public double getDiff_y() {
         return diff_y;
     }
 
-    public void setDiff_y(double diff_y) {
-        this.diff_y = diff_y;
-    }
-
+    /**
+     * Differences between vec_b and vec_a
+     */
     double diff_x;
     double diff_y;
 
+    /**
+     * Creates a DifferenceVector using two {@link Vector}s
+     * @param a
+     * @param b
+     */
     public DifferenceVector(Vector a, Vector b) {
         this.vec_a = a;
         this.vec_b = b;
@@ -34,6 +41,10 @@ public class DifferenceVector {
         this.diff_y = b.getY() - a.getY();
     }
 
+    /**
+     * Sets the DifferenceVectors state
+     * @param state
+     */
     public void setState(State state) {
         this.state = state;
     }
