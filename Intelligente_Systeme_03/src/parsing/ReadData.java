@@ -23,7 +23,9 @@ public class ReadData {
         CsvParserSettings settings = new CsvParserSettings();
         settings.getFormat().setLineSeparator("\n");
         settings.getFormat().setDelimiter(';');
-        settings.setMaxColumns(10000); // this might need to be changed, depending on the use case
+        // this might need to be changed, depending on the use case
+        // and most likely when handling larger files
+        settings.setMaxColumns(10000);
 
         CsvParser parser = new CsvParser(settings);
 
