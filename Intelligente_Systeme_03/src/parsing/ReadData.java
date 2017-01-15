@@ -7,7 +7,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * Handles I/O
+ */
 public class ReadData {
 
     /**
@@ -42,7 +44,7 @@ public class ReadData {
     }
 
     /**
-     * Gets coordinates from a String formatted like "x,xx;y,yy"
+     * Gets coordinates from a String formatted like "x.xx,y.yy"
      * @param s String of coordinates
      * @return Array containing x and y coordinates
      */

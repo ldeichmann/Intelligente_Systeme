@@ -1,5 +1,8 @@
 package geometry;
 
+/**
+ * Represent a Difference Vector
+ */
 public class DifferenceVector {
 
     /**

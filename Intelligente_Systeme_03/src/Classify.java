@@ -104,10 +104,14 @@ public class Classify {
 
     public static void main(String[] args) throws Exception {
 
-        double threshold = 14;
-
+        double threshold = 13.67;
+        // data for training
         List<List<Vector>> vecs_alone = ReadData.getVectorsFromFile(new File("train_alone.txt"));
         List<List<Vector>> vecs_group = ReadData.getVectorsFromFile(new File("train_group.txt"));
+        // data for evaluation
+        List<List<Vector>> eval_vecs = ReadData.getVectorsFromFile(new File("eval_group.txt"));
+
+
         List<DifferenceVector> diff_vecs_alone = new ArrayList<>();
         List<DifferenceVector> diff_vecs_group = new ArrayList<>();
 
@@ -127,8 +131,6 @@ public class Classify {
 
         Map<String, Double> counted_alone = countClassifications(diff_vecs_alone);
         Map<String, Double> counted_group = countClassifications(diff_vecs_group);
-
-        List<List<Vector>> eval_vecs = ReadData.getVectorsFromFile(new File("eval_alone.txt"));
 
         double count_alone = 0;
         double count_group = 0;
@@ -160,7 +162,9 @@ public class Classify {
             }
 
         }
-        printMatrix(counted_alone);
+        // for debugging purposes
+        // printMatrix(counted_alone);
+        // printMatrix(counted_group);
         System.out.println("Alone: " + count_alone + "\nGroup: " + count_group);
         System.out.format("Percent alone: %.4f%%\n",count_alone/((count_alone+count_group)));
         System.out.format("Percent group: %.4f%%\n", count_group/((count_alone+count_group)));

@@ -1,5 +1,8 @@
 package geometry;
 
+/**
+ * Represent a Vector
+ */
 public class Vector {
 
     /**
